@@ -18,8 +18,8 @@ const LoginPage: React.FC = () => {
     };
 
     // Dummy data for cards (replace with actual if needed)
-    const adminFeatures = ['Feature 1', 'Feature 2'];
-    const areaAdminFeatures = ['Feature A', 'Feature B'];
+    const adminFeatures = ['ADMIN', ''];
+    const areaAdminFeatures = ['AREA ADMIN', ''];
 
     return (
          <div className={styles.loginPageContainer}>
