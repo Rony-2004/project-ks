@@ -1,0 +1,13 @@
+/* src/pages/HomePage.module.css */
+.pageContainer {
+    display: flex;
+    flex-direction: column; /* Stack Navbar, main, Footer vertically */
+    height: 100vh; /* Crucial: Take exactly the viewport height */
+    background-color: #111827; /* Ensure consistent background */
+  }
+  
+  .mainContent {
+    flex-grow: 1; /* Allows this area to take up the remaining vertical space */
+    display: flex; /* Use flex to help vertically center HeroSection content */
+    overflow: hidden; /* Prevent overflow within this flexible area */
+  }

@@ -1,0 +1,76 @@
+/* src/pages/LoginPage.module.css */
+.loginPageContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* REMOVE min-height / height rules */
+    padding: 3rem 1rem 4rem 1rem; /* Adjust padding as needed */
+    background-color: #393737;
+    box-sizing: border-box;
+    position: relative; /* Keep for back button */
+    width: 100%;
+  }
+  /* Rest of the styles (.backButton, .mainHeading, .subHeading) remain as before, check spacing */
+   .backButton {
+      position: absolute;
+      top: 1.5rem;
+      left: 1.5rem;
+      background: white;
+      border: 1px solid #e5e7eb;
+      color: #1758c1;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .backButton:hover {
+      background-color: #4e7cd7;
+      border-color: #d1d5db;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  
+  .mainHeading {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #f8faff;
+      margin-top: 2rem;
+      margin-bottom: 0.8rem;
+      text-align: center;
+  }
+  
+  .subHeading {
+      font-size: 1.1rem;
+      color: #7f9cc4;
+      margin-bottom: 3rem;
+      text-align: center;
+      max-width: 550px;
+      line-height: 1.6;
+  }
+  
+  /* --- Focus Here: Adjust Cards Container Width --- */
+  .cardsContainer {
+    display: flex;
+    justify-content: center;
+    align-items: stretch; /* Keep cards same height if possible */
+    flex-wrap: wrap; /* Allow wrapping on narrow screens */
+    gap: 2rem; /* Reduced gap slightly */
+    width: 100%;
+    max-width: 1000px; /* Increased Max Width Significantly */
+    padding: 0 1rem; /* Add horizontal padding if needed */
+  }
+  
+  /* Responsive adjustments - ensure wrapping happens correctly */
+  @media (max-width: 768px) {
+     .loginPageContainer { padding: 5rem 1rem 3rem 1rem; }
+     .mainHeading { font-size: 2rem; margin-top: 1rem; }
+     .subHeading { font-size: 1rem; margin-bottom: 2rem; }
+     /* Ensure cards stack nicely when wrapping */
+     .cardsContainer { gap: 1.5rem; max-width: 400px; /* Constrain width when stacked */ }
+     .backButton { top: 1rem; left: 1rem; padding: 0.5rem 1rem; }
+  }
+   @media (max-width: 480px) {
+       .cardsContainer { max-width: 350px; } /* Further constrain width */
+   }

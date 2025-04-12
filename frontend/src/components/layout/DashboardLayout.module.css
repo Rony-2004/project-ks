@@ -1,0 +1,31 @@
+/* src/components/layout/DashboardLayout.module.css */
+.layout {
+    display: flex;
+    min-height: 100vh; /* Ensure layout takes full height */
+    background-color: #f3f4f6; /* Background for the main content area */
+  }
+  
+  .mainContent {
+    flex-grow: 1; /* Take remaining horizontal space */
+    /* Add margin-left equal to sidebar width */
+    margin-left: 250px;
+    /* Add padding to the main content area */
+    padding: 0; /* Reset padding, inner container will have it */
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .pageContent {
+      padding: 2rem; /* Padding for the actual page content inside main area */
+      flex-grow: 1; /* Allow content area to grow */
+       /* Add overflow if content might exceed viewport height */
+       /* overflow-y: auto; */
+  }
+  
+  /* Optional: Add responsive styles to hide/toggle sidebar on smaller screens */
+  @media (max-width: 768px) {
+    .mainContent {
+      margin-left: 0; /* Remove margin when sidebar might be hidden/overlayed */
+    }
+    /* Add styles here later for toggling/hiding sidebar */
+  }

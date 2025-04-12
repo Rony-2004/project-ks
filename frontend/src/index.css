@@ -1,0 +1,31 @@
+/* src/index.css */
+html, body, #root {
+  /* REMOVED height: 100%; */ /* Let height be natural */
+  /* height: 100%; */ /* Keep this ONLY if you want components inside to potentially use % heights reliably, but it's often not needed with modern CSS */
+  margin: 0;
+  padding: 0;
+  /* overflow: hidden; */ /* REMOVED THIS LINE - Allows scrolling */
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  background-color: #f9fafb; /* Set light background globally for login page consistency */
+  color-scheme: light dark;
+  color: #1f2937; /* Default dark text for light background */
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff; /* Default link color, adjust if needed */
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}

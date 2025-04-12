@@ -1,0 +1,67 @@
+/* src/components/login/RoleCard.module.css */
+.card {
+    border-radius: 12px; /* Adjust rounding */
+    padding: 1.8rem 1.5rem; /* Adjust padding slightly */
+    color: white;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    width: 100%; /* Allow card to take width within flex item */
+    max-width: 380px; /* Adjust max-width as needed to fit side-by-side */
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    /* Removed min-width if it was causing issues */
+    flex: 1 1 320px; /* Allow cards to flex: grow, shrink, base width */
+  }
+  
+  .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Color Schemes */
+  .admin { background: linear-gradient(145deg, #5b21b6, #7c3aed); }
+  .areaAdmin { background: linear-gradient(145deg, #047857, #059669); }
+  
+  /* --- Adjust internal spacing --- */
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.2rem; /* Adjust */
+  }
+  .iconWrapper {
+    font-size: 2rem; background-color: rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 0.7rem; /* Adjust */
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .roleTypeBadge {
+    background-color: rgba(0, 0, 0, 0.25); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.75rem; /* Adjust */
+    font-weight: bold; text-transform: uppercase;
+  }
+  .title {
+    font-size: 1.5rem; /* Adjust */ font-weight: 600; margin-bottom: 0.8rem; /* Adjust */
+  }
+  .description {
+    font-size: 0.95rem; /* Adjust */ color: #e0e0e0; line-height: 1.6; margin-bottom: 1.5rem; /* Adjust */
+  }
+  .features {
+    margin-bottom: 1.5rem; /* Adjust */ font-size: 0.9rem; /* Adjust */ color: #d1d5db;
+  }
+  .featuresTitle {
+    font-weight: 600; margin-bottom: 0.6rem; /* Adjust */ color: white; font-size: 0.95rem; /* Adjust */
+  }
+  .features ul { list-style: none; padding: 0; margin: 0; }
+  .features li {
+    margin-bottom: 0.5rem; /* Adjust */ padding-left: 1.1rem; /* Adjust */ position: relative;
+  }
+  .features li::before {
+    content: ''; position: absolute; left: 0; color: rgba(255, 255, 255, 0.9); font-weight: bold;
+  }
+  .continueButton {
+    background-color: white; border: none; border-radius: 8px; padding: 0.8rem 1rem; /* Adjust */
+    font-weight: bold; cursor: pointer; transition: all 0.3s ease; text-align: center;
+    width: 100%; margin-top: 1rem; /* Ensure space */ font-size: 0.95rem; /* Adjust */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  .admin .continueButton { color: #5b21b6; }
+  .areaAdmin .continueButton { color: #047857; }
+  .continueButton:hover {
+    background-color: #f8fafc; box-shadow: 0 4px 8px rgba(0,0,0,0.15); transform: translateY(-2px);
+  }
