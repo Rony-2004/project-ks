@@ -1,0 +1,62 @@
+/* frontend/src/pages/admin/AdminOverview.module.css */
+.overviewContainer {
+    padding: 1rem;
+  }
+  .overviewContainer h2 {
+     margin-bottom: 1.5rem;
+     color: #111827;
+     font-size: 1.8rem;
+     font-weight: 700;
+  }
+  
+  .statsGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+  }
+  
+  .statCard {
+      background-color: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.07);
+      text-align: center;
+      border-left: 5px solid #4f46e5; /* Accent color */
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .statCard:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+  }
+  
+  .statCard h4 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
+      color: #4b5563;
+      font-weight: 600;
+  }
+  
+  .statValue {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0;
+  }
+  
+  .loadingText {
+      padding: 2rem;
+      text-align: center;
+      color: #6b7280;
+      font-style: italic;
+  }
+  
+  .errorMessage {
+      color: #991b1b;
+      background-color: #fee2e2;
+      border: 1px solid #fca5a5;
+      padding: 0.8rem;
+      border-radius: 6px;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+  }

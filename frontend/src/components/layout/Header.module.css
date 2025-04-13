@@ -1,0 +1,128 @@
+/* frontend/src/components/layout/Header.module.css */
+.header {
+    background-color: white;
+    padding: 0 2rem; /* Horizontal padding */
+    height: 65px; /* Match navbar height or adjust */
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: sticky; /* Keep header sticky at the top */
+    top: 0;
+    z-index: 900; /* Below sidebar maybe? Adjust z-index */
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.headerContent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.headerLeft {
+    /* For breadcrumbs or page title later */
+}
+
+.headerRight {
+    position: relative; /* Needed for dropdown positioning */
+}
+
+.profileMenu {
+    position: relative;
+}
+
+.profileButton {
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+.profileButton:hover {
+    background-color: #f3f4f6; /* Light gray hover */
+}
+
+.profileIcon {
+    font-size: 1.8rem; /* Size of the user icon */
+    color: #6b7280; /* Gray icon */
+    margin-right: 0.6rem;
+}
+
+.profileName {
+    font-weight: 500;
+    color: #374151;
+    font-size: 0.95rem;
+}
+
+.dropdownIcon {
+    margin-left: 0.5rem;
+    font-size: 0.7rem;
+    color: #6b7280;
+}
+
+.dropdownMenu {
+    position: absolute;
+    top: 100%; /* Position below the button */
+    right: 0;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    min-width: 220px; /* Dropdown width */
+    z-index: 1000;
+    border: 1px solid #e5e7eb;
+    overflow: hidden; /* Ensures border radius applies to items */
+    margin-top: 0.5rem; /* Small gap */
+    animation: fadeInDropdown 0.2s ease-out;
+}
+
+@keyframes fadeInDropdown {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdownHeader {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+ .dropdownHeader strong {
+     color: #1f2937;
+     font-weight: 600;
+ }
+ .dropdownHeader small {
+     font-size: 0.8rem;
+ }
+
+.dropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* Space between icon and text */
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 0.95rem;
+    color: #374151;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.dropdownItem svg { /* Style icon */
+    font-size: 1rem;
+    color: #6b7280;
+}
+
+.dropdownItem:hover {
+    background-color: #f3f4f6; /* Hover effect */
+}
+
+.loading, .error {
+    font-size: 0.9rem;
+    color: #6b7280;
+    padding: 0.5rem;
+}
+.error { color: #ef4444; }

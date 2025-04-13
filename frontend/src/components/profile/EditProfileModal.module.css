@@ -1,0 +1,114 @@
+/* frontend/src/components/profile/EditProfileModal.module.css */
+/* Reusing modal styles from AdminAreaAdmins for consistency */
+
+.modalBackdrop {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1050;
+    animation: fadeIn 0.3s ease-out;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modalContent {
+    background-color: white; padding: 2rem 2.5rem; border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    width: 90%; max-width: 550px; max-height: 90vh;
+    overflow-y: auto;
+    animation: slideIn 0.3s ease-out;
+}
+@keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.modalContent h3 {
+    margin-top: 0; margin-bottom: 2rem; color: #111827; font-size: 1.6rem; text-align: center;
+}
+
+/* Profile Picture Section */
+.profilePicSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+.profilePic {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%; /* Circular */
+    object-fit: cover; /* Ensure image covers well */
+    margin-bottom: 1rem;
+    border: 3px solid #e5e7eb;
+}
+.changePicButton {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid #d1d5db;
+    background-color: #f9fafb;
+    color: #374151;
+    border-radius: 6px;
+    cursor: not-allowed; /* Disabled for now */
+    opacity: 0.7;
+}
+
+/* Form Group Styling */
+.formGroup {
+  margin-bottom: 1.25rem; /* Space between form groups */
+  text-align: left;
+}
+.formGroup label {
+  display: block; margin-bottom: 0.5rem; font-weight: 500;
+  font-size: 0.9rem; color: #374151;
+}
+.formGroup input { /* Inherit from AdminMembers or define here */
+  width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db;
+  border-radius: 6px; font-size: 1rem; box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background-color: #f9fafb; color: #1f2937;
+}
+.formGroup input:focus {
+  outline: none; border-color: #4f46e5; background-color: white;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+.formGroup input:disabled {
+    background-color: #e5e7eb;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Password section styling */
+.passwordSection {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px dashed #d1d5db;
+    opacity: 0.5; /* Visually indicate it's disabled */
+}
+.passwordSection h4 {
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    color: #6b7280;
+}
+
+/* Modal Actions */
+.modalActions {
+    display: flex; justify-content: flex-end; gap: 1rem;
+    margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;
+}
+
+/* Use button styles defined previously or redefine here */
+.submitButton, .cancelButton {
+    padding: 0.7rem 1.5rem; border: none; border-radius: 6px;
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+.submitButton { background-color: #4f46e5; color: white; }
+.submitButton:hover:not(:disabled) { background-color: #4338ca; }
+.submitButton:disabled { background-color: #a5b4fc; cursor: not-allowed; }
+.cancelButton { background-color: #e5e7eb; color: #374151; }
+.cancelButton:hover { background-color: #d1d5db; }
+
+/* Error/Success Messages */
+.errorMessage, .successMessage {
+  padding: 0.9rem 1rem; border-radius: 6px; margin: 1rem 0 0 0;
+  font-size: 0.9rem; font-weight: 500; text-align: center;
+}
+.errorMessage { color: #991b1b; background-color: #fee2e2; border: 1px solid #fca5a5; }
+.successMessage { color: #14532d; background-color: #dcfce7; border: 1px solid #86efac; }
