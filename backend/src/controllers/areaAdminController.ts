@@ -1,135 +1,202 @@
-// backend/src/controllers/areaAdminController.ts
+// backend/src/controllers/areaAdminController.ts (Using Prisma)
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
+import prisma from '../lib/prisma'; // <-- Import the Prisma Client instance
+import { UserRole } from '@prisma/client'; // <-- Import generated Enum type
 
-// Temporary In-Memory Store (Replace with Database Later!)
-interface AreaAdmin {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    areaName: string;
-    passwordHash?: string;
-    createdAt: Date;
-}
-let areaAdmins: AreaAdmin[] = []; // Temporary "database"
-let nextId = 1;
+// --- Remove In-Memory Store ---
+// let areaAdmins: AreaAdmin[] = []; // NO LONGER NEEDED
+// let nextId = 1; // NO LONGER NEEDED
 
-// --- GET all Area Admins (Existing) ---
+// --- Controller to GET all Area Admins ---
 export const getAllAreaAdmins = async (req: Request, res: Response) => {
-    console.log(`[${new Date().toISOString()}] GET /api/area-admins requested`);
+    console.log(`[${new Date().toISOString()}] GET /api/area-admins requested (Prisma)`);
     try {
-        const adminsToSend = areaAdmins.map(({ passwordHash, ...rest }) => rest);
-        res.status(200).json(adminsToSend);
+        // Use Prisma Client to find users with the 'AreaAdmin' role
+        const admins = await prisma.user.findMany({
+            where: {
+                role: UserRole.AreaAdmin // Use the enum for type safety
+            },
+            select: { // Select only the fields safe to send back
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                areaName: true,
+                createdAt: true,
+                updatedAt: true
+            },
+            orderBy: { createdAt: 'desc' } // Optional ordering
+        });
+        console.log(`[${new Date().toISOString()}] Found ${admins.length} area admins in DB.`);
+        res.status(200).json(admins);
     } catch (error: any) {
-        console.error(`[${new Date().toISOString()}] Error fetching area admins:`, error);
-        res.status(500).json({ message: 'Error fetching area admins' });
+        console.error(`[${new Date().toISOString()}] Prisma Error fetching area admins:`, error);
+        res.status(500).json({ message: 'Error fetching area admins from database' });
     }
 };
 
-// --- CREATE a new Area Admin (Existing) ---
+// --- Controller to CREATE a new Area Admin ---
 export const createAreaAdmin = async (req: Request, res: Response) => {
-    console.log(`[${new Date().toISOString()}] POST /api/area-admins requested`);
+    console.log(`[${new Date().toISOString()}] POST /api/area-admins requested (Prisma)`);
     const { name, email, phone, areaName, password } = req.body;
+
+    // Validation
     if (!name || !email || !phone || !areaName || !password) {
-        return res.status(400).json({ message: 'Missing required fields' });
+        return res.status(400).json({ message: 'Missing required fields (name, email, phone, areaName, password)' });
     }
-    if (areaAdmins.some(admin => admin.email === email)) {
-        return res.status(409).json({ message: 'Email already in use' });
-    }
+    // TODO: Add more robust validation (email format, password strength etc.)
+
     try {
+        // Check if email already exists in the database
+        const existingUser = await prisma.user.findUnique({ where: { email } });
+        if (existingUser) {
+            console.log(`[${new Date().toISOString()}] Email conflict: ${email} already exists.`);
+            return res.status(409).json({ message: 'Email already in use' }); // 409 Conflict
+        }
+
+        // Hash the password
         const saltRounds = 10;
         const passwordHash = await bcrypt.hash(password, saltRounds);
-        const newAdmin: AreaAdmin = {
-            id: (nextId++).toString(), name, email, phone, areaName, passwordHash, createdAt: new Date()
-        };
-        areaAdmins.push(newAdmin);
-        console.log(`[${new Date().toISOString()}] Area Admin created:`, { id: newAdmin.id, name: newAdmin.name });
+        console.log(`[${new Date().toISOString()}] Hashed password for new area admin.`);
+
+        // Use Prisma Client to create the new user in the database
+        const newAdmin = await prisma.user.create({
+            data: {
+                name,
+                email,
+                phone, // Ensure phone is included if required or handle optionality
+                areaName,
+                passwordHash, // Store the hash
+                role: UserRole.AreaAdmin // Set the role explicitly
+                // Prisma handles id, createdAt, updatedAt based on schema defaults
+            }
+        });
+
+        console.log(`[${new Date().toISOString()}] Area Admin created in DB:`, { id: newAdmin.id, name: newAdmin.name, email: newAdmin.email });
+
+        // Respond with the created admin data (excluding password hash)
         const { passwordHash: _, ...adminToSend } = newAdmin;
         res.status(201).json(adminToSend);
+
     } catch (error: any) {
-        console.error(`[${new Date().toISOString()}] Error creating area admin:`, error);
-        res.status(500).json({ message: 'Error creating area admin' });
+        console.error(`[${new Date().toISOString()}] Prisma Error creating area admin:`, error);
+        res.status(500).json({ message: 'Error creating area admin in database' });
     }
 };
 
-// --- **NEW** DELETE an Area Admin ---
+// --- Controller to DELETE an Area Admin ---
 export const deleteAreaAdmin = async (req: Request, res: Response) => {
-    const { id } = req.params; // Get ID from URL parameter
-    console.log(`[<span class="math-inline">\{new Date\(\)\.toISOString\(\)\}\] DELETE /api/area\-admins/</span>{id} requested`);
+    const { id } = req.params;
+    console.log(`[${new Date().toISOString()}] DELETE /api/area-admins/${id} requested (Prisma)`);
 
-    const initialLength = areaAdmins.length;
-    areaAdmins = areaAdmins.filter(admin => admin.id !== id); // Filter out the admin with the matching ID
+    try {
+        // Use Prisma Client to delete the user (ensure it's an AreaAdmin for safety)
+        await prisma.user.delete({
+            where: {
+                id: id,
+                // Optional: Add role check if only AreaAdmins should be deleted via this endpoint
+                // role: UserRole.AreaAdmin
+            }
+            // Note: Prisma will throw an error if the ID doesn't exist (P2025)
+        });
+        console.log(`[${new Date().toISOString()}] Area Admin deleted from DB: ID=${id}`);
+        res.status(204).send(); // Success, No Content
 
-    if (areaAdmins.length < initialLength) {
-        // If the length decreased, deletion was successful
-        console.log(`[<span class="math-inline">\{new Date\(\)\.toISOString\(\)\}\] Area Admin deleted successfully\: ID\=</span>{id}`);
-        res.status(204).send(); // 204 No Content is standard for successful DELETE
-    } else {
-        // If the length is the same, the ID was not found
-        console.log(`[<span class="math-inline">\{new Date\(\)\.toISOString\(\)\}\] Area Admin not found for deletion\: ID\=</span>{id}`);
-        res.status(404).json({ message: 'Area Admin not found' });
+    } catch (error: any) {
+         // Handle specific Prisma error if record to delete is not found
+        // @ts-ignore - Check if error has a code property
+        if (error.code === 'P2025') {
+             console.log(`[${new Date().toISOString()}] Area Admin not found for deletion in DB: ID=${id}`);
+             return res.status(404).json({ message: 'Area Admin not found' });
+        }
+        console.error(`[${new Date().toISOString()}] Prisma Error deleting area admin:`, error);
+        res.status(500).json({ message: 'Error deleting area admin from database' });
     }
 };
 
-// --- **NEW** UPDATE an Area Admin ---
+// --- Controller to UPDATE an Area Admin ---
 export const updateAreaAdmin = async (req: Request, res: Response) => {
-    const { id } = req.params; // Get ID from URL parameter
-    // Get updated data from request body - **excluding password** for simplicity
-    const { name, email, phone, areaName } = req.body;
-    console.log(`[<span class="math-inline">\{new Date\(\)\.toISOString\(\)\}\] PUT /api/area\-admins/</span>{id} requested with data:`, req.body);
+    const { id } = req.params;
+    const { name, email, phone, areaName } = req.body; // Exclude password updates here
+    console.log(`[${new Date().toISOString()}] PUT /api/area-admins/${id} requested with data (Prisma):`, req.body);
 
-
-    // Basic Validation (check if at least one field is provided)
     if (!name && !email && !phone && !areaName) {
-        return res.status(400).json({ message: 'No update data provided (name, email, phone, areaName)' });
-    }
-
-    const adminIndex = areaAdmins.findIndex(admin => admin.id === id);
-
-    if (adminIndex === -1) {
-        console.log(`[<span class="math-inline">\{new Date\(\)\.toISOString\(\)\}\] Area Admin not found for update\: ID\=</span>{id}`);
-        return res.status(404).json({ message: 'Area Admin not found' });
-    }
-
-    // Check for email conflict if email is being changed
-    if (email && email !== areaAdmins[adminIndex].email) {
-        if (areaAdmins.some(admin => admin.email === email && admin.id !== id)) {
-             console.log(`[${new Date().toISOString()}] Email conflict during update: ${email}`);
-            return res.status(409).json({ message: 'Email already in use by another admin' });
-        }
+        return res.status(400).json({ message: 'No update data provided' });
     }
 
     try {
-        // Update the found admin (only provided fields)
-        const originalAdmin = areaAdmins[adminIndex];
-        const updatedAdmin = {
-            ...originalAdmin,
-            name: name ?? originalAdmin.name, // Use new value or keep original
-            email: email ?? originalAdmin.email,
-            phone: phone ?? originalAdmin.phone,
-            areaName: areaName ?? originalAdmin.areaName,
-        };
+        // Optional: Check for email conflict before updating
+        if (email) {
+             const existingUser = await prisma.user.findFirst({
+                where: { email: email, NOT: { id: id } } // Find other users with the same new email
+             });
+             if (existingUser) {
+                 console.log(`[${new Date().toISOString()}] Email conflict during update (Prisma): ${email}`);
+                return res.status(409).json({ message: 'Email already in use by another user' });
+             }
+        }
 
-        // **Password Change Handling - Optional - Add later if needed**
-        // If a 'password' field is included in req.body and is not empty:
-        // const { password } = req.body;
-        // if (password) {
-        //     console.log(`[${new Date().toISOString()}] Hashing new password for update...`);
-        //     const saltRounds = 10;
-        //     updatedAdmin.passwordHash = await bcrypt.hash(password, saltRounds);
-        // }
+        // Prepare data object with only the fields that were provided
+        const updateData: { name?: string; email?: string; phone?: string; areaName?: string } = {};
+        if (name !== undefined) updateData.name = name;
+        if (email !== undefined) updateData.email = email;
+        if (phone !== undefined) updateData.phone = phone;
+        if (areaName !== undefined) updateData.areaName = areaName;
+        // Add updatedAt manually if needed, or let Prisma handle it via @updatedAt
 
-        // Replace the old admin with the updated one in our "database"
-        areaAdmins[adminIndex] = updatedAdmin;
-        console.log(`[<span class="math-inline">\{new Date\(\)\.toISOString\(\)\}\] Area Admin updated successfully\: ID\=</span>{id}`);
+        // Use Prisma Client to update the user (ensure it's an AreaAdmin if desired)
+        const updatedAdmin = await prisma.user.update({
+            where: {
+                id: id,
+                // Optional: Add role check
+                // role: UserRole.AreaAdmin
+            },
+            data: updateData
+        });
 
-        // Respond with the updated admin data (excluding hash)
+        console.log(`[${new Date().toISOString()}] Area Admin updated in DB: ID=${id}`);
+
+        // Respond with updated data (excluding hash)
         const { passwordHash: _, ...adminToSend } = updatedAdmin;
         res.status(200).json(adminToSend);
 
     } catch (error: any) {
-        console.error(`[${new Date().toISOString()}] Error updating area admin:`, error);
-        res.status(500).json({ message: 'Error updating area admin' });
+         // Handle specific Prisma error if record to update is not found
+         // @ts-ignore
+         if (error.code === 'P2025') {
+             console.log(`[${new Date().toISOString()}] Area Admin not found for update in DB: ID=${id}`);
+             return res.status(404).json({ message: 'Area Admin not found' });
+        }
+        console.error(`[${new Date().toISOString()}] Prisma Error updating area admin:`, error);
+        res.status(500).json({ message: 'Error updating area admin in database' });
+    }
+};
+
+// --- Controller to GET a single Area Admin by ID ---
+export const getAreaAdminById = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    console.log(`[${new Date().toISOString()}] GET /api/area-admins/${id} requested (Prisma)`);
+    try {
+        const admin = await prisma.user.findUnique({
+            where: {
+                id: id,
+                role: UserRole.AreaAdmin // Ensure we only fetch AreaAdmins by this endpoint
+            },
+            select: { // Select only needed fields, exclude hash
+                 id: true, name: true, email: true, phone: true, areaName: true, createdAt: true, updatedAt: true
+            }
+        });
+
+        if (admin) {
+            console.log(`[${new Date().toISOString()}] Found Area Admin by ID (Prisma):`, { id: admin.id, name: admin.name });
+            res.status(200).json(admin);
+        } else {
+            console.log(`[${new Date().toISOString()}] Area Admin not found by ID (Prisma): ${id}`);
+            res.status(404).json({ message: 'Area Admin not found' });
+        }
+    } catch (error: any) {
+        console.error(`[${new Date().toISOString()}] Prisma Error fetching area admin by ID:`, error);
+        res.status(500).json({ message: 'Error fetching area admin details' });
     }
 };

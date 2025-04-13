@@ -1,0 +1,46 @@
+// backend/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // <--- CHANGED FROM "sqlite"
+  url      = env("DATABASE_URL") // Reads the Supabase URL from .env
+}
+
+// --- User Model (Should work fine with PostgreSQL) ---
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  phone         String?
+  role          UserRole
+  passwordHash  String
+  areaName      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  assignedMembers Member[] @relation("AreaAdminMembers")
+  @@map("users")
+}
+
+enum UserRole {
+  Admin
+  AreaAdmin
+}
+
+// --- Member Model (Should work fine with PostgreSQL) ---
+model Member {
+  id                  String    @id @default(cuid())
+  name                String
+  phone               String
+  address             String
+  monthlyAmount       Float // Float maps well to PostgreSQL numeric/decimal types
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  assignedAreaAdminId String?
+  assignedAreaAdmin   User?     @relation("AreaAdminMembers", fields: [assignedAreaAdminId], references: [id])
+  @@map("members")
+}
+
+// Add Payment Model Later...
