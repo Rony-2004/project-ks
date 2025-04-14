@@ -1,57 +1,53 @@
-// src/App.tsx
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+// frontend/src/App.tsx (Ensure NO BrowserRouter here)
+import React from 'react'; // Ensure React is imported
+import { Routes, Route } from 'react-router-dom';
+
+// --- Page and Component Imports ---
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import AdminSignInPage from './pages/AdminSignInPage';
+import AreaAdminSignInPage from './pages/AreaAdminSignInPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
-import ProtectedRoute from './components/auth/ProtectedRoute'; // Import ProtectedRoute
-
-// Import placeholder dashboard sections
+import AreaAdminDashboardPage from './pages/AreaAdminDashboardPage';
 import AdminOverview from './pages/admin/AdminOverview';
 import AdminMembers from './pages/admin/AdminMembers';
 import AdminAreaAdmins from './pages/admin/AdminAreaAdmins';
 import AdminPayments from './pages/admin/AdminPayments';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 import './App.css';
 
 function App() {
+  // --- NO BrowserRouter here ---
   return (
-    <BrowserRouter>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/admin/signin" element={<AdminSignInPage />} />
-        {/* Add Area Admin public routes later */}
+        <Route path="/area-admin/signin" element={<AreaAdminSignInPage />} />
 
-        {/* --- Protected Admin Routes --- */}
-        <Route element={<ProtectedRoute allowedRoles={['admin']} />}> {/* Wrap parent route */}
-          <Route path="/admin/dashboard" element={<AdminDashboardPage />}> {/* Layout component */}
-            {/* Nested routes render inside AdminDashboardPage's <Outlet /> */}
-            <Route index element={<AdminOverview />} /> {/* Default view at /admin/dashboard */}
-            <Route path="members" element={<AdminMembers />} /> {/* /admin/dashboard/members */}
-            <Route path="area-admins" element={<AdminAreaAdmins />} /> {/* /admin/dashboard/area-admins */}
-            <Route path="payments" element={<AdminPayments />} /> {/* /admin/dashboard/payments */}
-            {/* Add more nested admin routes here (e.g., settings) */}
+        {/* Protected Admin Routes */}
+        <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+          <Route path="/admin/dashboard" element={<AdminDashboardPage />}>
+            <Route index element={<AdminOverview />} />
+            <Route path="members" element={<AdminMembers />} />
+            <Route path="area-admins" element={<AdminAreaAdmins />} />
+            <Route path="payments" element={<AdminPayments />} />
           </Route>
-          {/* Add other top-level admin routes here if they don't use the dashboard layout */}
         </Route>
 
-        {/* --- Protected Area Admin Routes (Example Structure) --- */}
-        {/*
+        {/* Protected Area Admin Routes */}
         <Route element={<ProtectedRoute allowedRoles={['areaAdmin']} />}>
-           <Route path="/area-admin/dashboard" element={<AreaAdminDashboardPage />}>
-              <Route index element={<AreaAdminOverview />} />
-              <Route path="members" element={<AreaAdminMembersLocal />} />
-           </Route>
+          <Route path="/area-admin/dashboard" element={<AreaAdminDashboardPage />} />
+          {/* Nest Area Admin specific pages here later */}
         </Route>
-        */}
 
-        {/* Optional: Catch-all 404 */}
-        {/* <Route path="*" element={<NotFoundPage />} /> */}
+        {/* Not Found Route */}
+        
       </Routes>
-    </BrowserRouter>
   );
+   // --- NO closing </BrowserRouter> here ---
 }
 
 export default App;
