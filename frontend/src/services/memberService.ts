@@ -1,7 +1,7 @@
 // frontend/src/services/memberService.ts
 import apiClient from '../utils/apiClient'; // Import the configured Axios instance
 
-// Define the structure of Member data (match backend)
+// Define the structure of Member data EXPECTED FROM THE BACKEND NOW
 export interface MemberData {
   id: string;
   name: string;
@@ -10,6 +10,11 @@ export interface MemberData {
   monthlyAmount: number;
   assignedAreaAdminId: string | null;
   createdAt: string; // Dates often come as strings from JSON
+  // --- Ensure this nested field is defined ---
+  assignedAreaAdmin?: { // Optional (because relation might be null)
+    name: string;
+  } | null;
+  // --- End ensure ---
 }
 
 // Define the structure for creating a new Member
@@ -32,9 +37,9 @@ export type UpdateMemberData = Partial<Omit<NewMemberData, 'assignedAreaAdminId'
 export const getMembers = async (): Promise<MemberData[]> => {
     try {
         console.log('Service: Fetching members...');
-        const response = await apiClient.get<MemberData[]>('/members'); // Use relative path (base URL is in apiClient)
+        const response = await apiClient.get<MemberData[]>('/members'); // Use relative path
         console.log('Service: Fetched members:', response.data);
-        return response.data;
+        return response.data; // API now returns the nested name if available
     } catch (error: any) {
         console.error('Service: Error fetching members:', error.response?.data || error.message);
         throw new Error(error.response?.data?.message || 'Failed to fetch members.');
@@ -45,11 +50,7 @@ export const getMembers = async (): Promise<MemberData[]> => {
 export const addMember = async (data: NewMemberData): Promise<MemberData> => {
      try {
         console.log('Service: Adding member:', data);
-        // Ensure monthlyAmount is sent as a number if possible
-        const payload = {
-            ...data,
-            monthlyAmount: Number(data.monthlyAmount) || 0 // Convert to number, default to 0 if invalid
-        };
+        const payload = { ...data, monthlyAmount: Number(data.monthlyAmount) || 0 };
         const response = await apiClient.post<MemberData>('/members', payload);
          console.log('Service: Added member response:', response.data);
         return response.data;
@@ -63,12 +64,10 @@ export const addMember = async (data: NewMemberData): Promise<MemberData> => {
 export const updateMember = async (id: string, data: UpdateMemberData): Promise<MemberData> => {
     try {
         console.log(`Service: Updating member ID ${id} with data:`, data);
-         // Ensure monthlyAmount is sent as a number if present
         const payload = { ...data };
         if (payload.monthlyAmount !== undefined && payload.monthlyAmount !== null) {
             payload.monthlyAmount = Number(payload.monthlyAmount) || 0;
         }
-
         const response = await apiClient.put<MemberData>(`/members/${id}`, payload);
         console.log('Service: Updated member successfully:', response.data);
         return response.data;
@@ -90,6 +89,3 @@ export const deleteMember = async (id: string): Promise<void> => {
          throw new Error(error.response?.data?.message || 'Failed to delete member.');
     }
 };
-
-// --- Optional: Function to Assign Member to Area Admin ---
-// export const assignMember = async (memberId: string, areaAdminId: string | null): Promise<MemberData> => { ... }
