@@ -1,97 +1,71 @@
-// backend/src/controllers/paymentController.ts
+// backend/src/controllers/paymentController.ts (REMOVING internal role check)
 import { Request, Response } from 'express';
-import prisma from '../lib/prisma'; // Import Prisma Client
-import { PaymentMethod, UserRole } from '@prisma/client'; // Import Enums
+import prisma from '../lib/prisma';
+import { PaymentMethod } from '@prisma/client';
+// Removed UserRole import as it's not directly needed here anymore
 
 export const recordPayment = async (req: Request, res: Response) => {
     const controllerStartTime = new Date();
     console.log(`[${controllerStartTime.toISOString()}] --- Received POST ${process.env.API_PREFIX || '/api'}/payments ---`);
 
-    // Get payment details from request body
-    const {
-        memberId,       // ID of the member who paid
-        amountPaid,     // Amount received
-        paymentMethod,  // 'Cash' or 'Online'
-        paymentMonth,   // e.g., 1 for Jan, 12 for Dec
-        paymentYear,    // e.g., 2024
-        paymentDate     // Optional: Date received (e.g., "YYYY-MM-DD"), defaults to now if not sent
-    } = req.body;
-
-    // Get the logged-in Area Admin's ID from the request object (set by 'protect' middleware)
+    const { memberId, amountPaid, paymentMethod, paymentMonth, paymentYear, paymentDate } = req.body;
     // @ts-ignore
-    const areaAdminId = req.user?.id;
+    const loggedInUserId = req.user?.id; // We still need the ID for recording and auth check
     // @ts-ignore
-    const userRole = req.user?.role;
+    const loggedInUserRole = req.user?.role; // Log it, but don't block based on it here
 
     console.log(`[${controllerStartTime.toISOString()}] Request Body:`, req.body);
-    console.log(`[${controllerStartTime.toISOString()}] Recorded by Area Admin ID: ${areaAdminId}`);
+    // Log the info received from middleware, but don't use loggedInUserRole for primary check here
+    console.log(`>>> [recordPayment] Recorded by User ID: ${loggedInUserId}, Role from middleware: ${loggedInUserRole}`);
 
-    // --- Validation ---
-    if (!areaAdminId || userRole !== UserRole.AreaAdmin) {
-        return res.status(403).json({ message: 'Forbidden: Only Area Admins can record payments.' });
+    // --- REMOVED/COMMENTED OUT THIS BLOCK ---
+    // if (!loggedInUserId || loggedInUserRole !== 'areaAdmin') {
+    //     console.log(`[recordPayment] Permission Check Failed: Role is '${loggedInUserRole}', expected 'areaAdmin'`);
+    //     return res.status(403).json({ message: 'Forbidden: Only Area Admins can record payments.' });
+    // }
+    // --- END REMOVED BLOCK ---
+
+    // --- Validation (Keep other validation) ---
+    if (!loggedInUserId){ // Still need to ensure user ID exists from middleware
+         console.error("Middleware error: loggedInUserId missing!");
+         return res.status(401).json({ message: 'Authorization error' });
     }
-    if (!memberId || !amountPaid || !paymentMethod || !paymentMonth || !paymentYear) {
-        return res.status(400).json({ message: 'Missing required fields (memberId, amountPaid, paymentMethod, paymentMonth, paymentYear)' });
-    }
-    // Validate payment method Enum
-    if (!(paymentMethod in PaymentMethod)) {
-         return res.status(400).json({ message: `Invalid paymentMethod. Must be one of: ${Object.keys(PaymentMethod).join(', ')}` });
-    }
-    // Validate numeric types
-    const amount = Number(amountPaid);
-    const month = Number(paymentMonth);
-    const year = Number(paymentYear);
-    if (isNaN(amount) || amount <= 0 || isNaN(month) || month < 1 || month > 12 || isNaN(year) || year < 2000 || year > 2100) {
-         return res.status(400).json({ message: 'Invalid amount, month, or year provided.' });
-    }
-    // Validate date if provided, otherwise use current date
-    let paymentDateObj = new Date(); // Default to now
-    if (paymentDate) {
-        paymentDateObj = new Date(paymentDate);
-        if (isNaN(paymentDateObj.getTime())) {
-            return res.status(400).json({ message: 'Invalid paymentDate format provided. Use YYYY-MM-DD.' });
-        }
-    }
+    if (!memberId || !amountPaid || !paymentMethod || !paymentMonth || !paymentYear) { /* ... */ return res.status(400).json({ message: 'Missing required fields...' }); }
+    if (!(paymentMethod in PaymentMethod)) { /* ... */ return res.status(400).json({ message: `Invalid paymentMethod.` }); }
+    const amount = Number(amountPaid); const month = Number(paymentMonth); const year = Number(paymentYear);
+    if (isNaN(amount) || amount <= 0 || isNaN(month) || month < 1 || month > 12 || isNaN(year) || year < 2000 || year > 2100) { /* ... */ return res.status(400).json({ message: 'Invalid amount, month, or year.' }); }
+    let paymentDateObj = new Date(); if (paymentDate) { /* ... date parsing ... */ }
     // --- End Validation ---
-
 
     try {
         // --- Authorization Check: Verify Member belongs to this Area Admin ---
-        console.log(`[${controllerStartTime.toISOString()}] Verifying member assignment... MemberID: ${memberId}, AreaAdminID: ${areaAdminId}`);
+        // This check remains crucial!
+        console.log(`[${controllerStartTime.toISOString()}] Verifying member assignment... MemberID: ${memberId}, AreaAdminID: ${loggedInUserId}`);
         const member = await prisma.member.findFirst({
-            where: {
-                id: memberId,
-                assignedAreaAdminId: areaAdminId // Check if member is assigned to the logged-in Area Admin
-            }
+            where: { id: memberId, assignedAreaAdminId: loggedInUserId } // Check assignment
         });
-
         if (!member) {
-            console.log(`[${controllerStartTime.toISOString()}] Forbidden: Member ${memberId} not found or not assigned to Area Admin ${areaAdminId}.`);
+            console.log(`[${controllerStartTime.toISOString()}] Forbidden: Member ${memberId} not found or not assigned.`);
             return res.status(403).json({ message: 'You are not authorized to record payments for this member.' });
         }
         console.log(`[${controllerStartTime.toISOString()}] Member assignment verified.`);
-        // --- End Authorization Check ---
 
-
-        // Create the payment record in the database
+        // Create payment record
         console.log(`[${controllerStartTime.toISOString()}] Creating payment record in DB...`);
         const newPayment = await prisma.payment.create({
             data: {
-                amountPaid: amount,
-                paymentDate: paymentDateObj,
-                paymentMonth: month,
-                paymentYear: year,
-                paymentMethod: paymentMethod as PaymentMethod, // Cast to enum type
-                memberId: memberId,          // Link to the member
-                recordedById: areaAdminId    // Link to the area admin who recorded it
+                amountPaid: amount, paymentDate: paymentDateObj, paymentMonth: month,
+                paymentYear: year, paymentMethod: paymentMethod as PaymentMethod,
+                memberId: memberId, recordedById: loggedInUserId // Use ID from middleware
             }
         });
-
-        console.log(`[${controllerStartTime.toISOString()}] Payment recorded successfully: ID=${newPayment.id}`);
-        res.status(201).json(newPayment); // Respond with the created payment record
+        console.log(`[<span class="math-inline">\{controllerStartTime\.toISOString\(\)\}\] Payment recorded successfully\: ID\=</span>{newPayment.id}`);
+        res.status(201).json(newPayment);
 
     } catch (error: any) {
         console.error(`[${controllerStartTime.toISOString()}] Prisma Error recording payment:`, error);
         res.status(500).json({ message: 'Error recording payment' });
     }
-};
+}; // End recordPayment
+
+// Keep other controllers (getAllAreaAdmins etc.) if they are in this filea

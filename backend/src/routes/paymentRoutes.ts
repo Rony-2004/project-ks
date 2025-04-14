@@ -1,8 +1,9 @@
-// backend/src/routes/paymentRoutes.ts (FIXED)
+// backend/src/routes/paymentRoutes.ts (VERIFY THIS CODE)
 import express from 'express';
-import { recordPayment } from '../controllers/paymentController';
-import { protect, restrictTo } from '../middleware/authMiddleware';
-import { UserRole } from '@prisma/client'; // <-- ADD THIS IMPORT
+import { recordPayment } from '../controllers/paymentController'; // Verify path
+import { protect, restrictTo } from '../middleware/authMiddleware'; // Verify path
+// Removed UserRole import as we use strings now
+// import { UserRole } from '@prisma/client';
 
 const router = express.Router();
 
@@ -11,10 +12,10 @@ router.use(protect); // Must be logged in
 
 // Define POST route for recording payments
 // Only Area Admins can access this specific route
-// Now UserRole.AreaAdmin can be correctly referenced
-router.post('/', restrictTo(UserRole.AreaAdmin), recordPayment);
+// Ensure 'areaAdmin' is lowercase string
+router.post('/', restrictTo('areaAdmin'), recordPayment); // <-- Check this line carefully
 
-// Add other payment routes later (e.g., GET payments for admin/area-admin)
-// router.get('/', restrictTo(UserRole.Admin, UserRole.AreaAdmin), getAllPayments);
+// Add other payment routes later
+// router.get('/', restrictTo('admin', 'areaAdmin'), getAllPayments);
 
 export default router;
