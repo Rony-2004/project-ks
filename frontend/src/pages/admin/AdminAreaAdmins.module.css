@@ -195,6 +195,66 @@
      background-color: #dcfce7; /* Light Green BG */
      border: 1px solid #86efac; /* Green Border */
   }
+  /* In the relevant CSS Module file */
+
+/* --- Search Bar Styles --- */
+.searchContainer {
+  margin-bottom: 1.5rem;
+  max-width: 400px;
+  position: relative;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem; /* Left padding for icon */
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background-color: white;
+}
+.searchInput:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 1rem;
+}
+/* --- Search Bar Styles (Should be IN your .module.css file) --- */
+.searchContainer {
+  margin-bottom: 1.5rem;
+  max-width: 400px;
+  position: relative;
+}
+.searchInput {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem; /* Left padding for icon */
+  border: 1px solid #000000;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background-color: rgb(0, 0, 0);
+}
+.searchInput:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+.searchInput::placeholder { color: #f1f1f1; font-style: italic; }
+.searchIcon {
+  position: absolute; left: 0.8rem; top: 50%;
+  transform: translateY(-50%); color: #9ca3af; font-size: 1rem;
+  pointer-events: none;
+}
   
   /* --- Modal Styling (Refined) --- */
   .modalBackdrop {

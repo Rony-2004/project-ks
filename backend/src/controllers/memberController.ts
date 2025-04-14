@@ -68,7 +68,99 @@ export const createMember = async (req: Request, res: Response) => {
 };
 
 // --- UPDATE a Member ---
-export const updateMember = async (req: Request, res: Response) => { /* ... Keep previous Prisma version ... */ };
+export const updateMember = async (req: Request, res: Response) => {
+    const controllerStartTime = new Date();
+    const { id } = req.params; // Member ID to update
+    const { name, phone, address, monthlyAmount, assignedAreaAdminId } = req.body; // Data from frontend
+    const logPrefix = `[${controllerStartTime.toISOString()}] updateMember (ID: ${id}):`;
+
+    console.log(`<span class="math-inline">\{logPrefix\} \-\-\- Received PUT /api/members/</span>{id} ---`);
+    console.log(`${logPrefix} Request Body:`, req.body);
+
+    if (!id) {
+        console.log(`${logPrefix} FAIL - Missing ID in URL.`);
+        return res.status(400).json({ message: "Member ID required in URL parameter." });
+    }
+
+    try {
+         // Prepare update data object - include fields ONLY if they were sent in the body
+         const updateData: {
+            name?: string;
+            phone?: string;
+            address?: string;
+            monthlyAmount?: number;
+            assignedAreaAdminId?: string | null;
+         } = {};
+         console.log(`${logPrefix} Preparing data for update...`);
+
+         if (name !== undefined) updateData.name = name;
+         if (phone !== undefined) updateData.phone = phone;
+         if (address !== undefined) updateData.address = address;
+
+         // Validate and add monthlyAmount if present
+         if (monthlyAmount !== undefined) {
+            // Allow setting amount to 0, but not invalid numbers or null
+            if (monthlyAmount === null) {
+                console.log(`${logPrefix} FAIL Validation: monthlyAmount cannot be null.`);
+                return res.status(400).json({ message: 'Monthly amount cannot be null.' });
+            }
+            const amount = Number(monthlyAmount);
+            if (isNaN(amount) || amount < 0) {
+                console.log(`<span class="math-inline">\{logPrefix\} FAIL Validation\: Invalid monthly amount \(</span>{monthlyAmount}).`);
+                return res.status(400).json({ message: 'Invalid monthly amount provided for update' });
+            }
+            updateData.monthlyAmount = amount;
+            console.log(`${logPrefix} - Will update monthlyAmount to: ${amount}`);
+         }
+
+         // Handle assignedAreaAdminId (allow setting to null with empty string or null)
+         if (assignedAreaAdminId !== undefined) {
+             const finalAssigneeId = (assignedAreaAdminId === '' || assignedAreaAdminId === null) ? null : assignedAreaAdminId;
+             console.log(`<span class="math-inline">\{logPrefix\} Processing assignedAreaAdminId\: Received\='</span>{assignedAreaAdminId}', Final='${finalAssigneeId}'`);
+             // Optional: Validate the ID exists if it's not null
+             if (finalAssigneeId) {
+                 console.log(`${logPrefix} Validating assignedAreaAdminId: ${finalAssigneeId}...`);
+                 const areaAdminExists = await prisma.user.findUnique({ where: { id: finalAssigneeId, role: 'AreaAdmin' } }); // Check role too
+                 if (!areaAdminExists) {
+                     console.log(`${logPrefix} FAIL Validation: Assigned Area Admin ID ${finalAssigneeId} not found or not AreaAdmin.`);
+                     return res.status(400).json({ message: `Invalid assignedAreaAdminId: Not Found or invalid role.` });
+                 }
+                 console.log(`${logPrefix} Assigned Area Admin ID validation passed.`);
+             }
+             updateData.assignedAreaAdminId = finalAssigneeId;
+             console.log(`${logPrefix} - Will update assignedAreaAdminId to: ${finalAssigneeId}`);
+         }
+
+        // Check if there's actually anything to update
+        if (Object.keys(updateData).length === 0) {
+             console.log(`${logPrefix} FAIL Validation: No valid fields provided for update.`);
+             return res.status(400).json({ message: 'No valid fields provided for update.' });
+        }
+
+        // Use Prisma Client to update the member
+        console.log(`${logPrefix} Attempting prisma.member.update with data:`, updateData);
+        const updatedMember = await prisma.member.update({
+            where: { id: id },
+            data: updateData
+        }); // <<< POTENTIAL HANG POINT?
+        console.log(`${logPrefix} Prisma update successful.`);
+
+        console.log(`[${controllerStartTime.toISOString()}] updateMember: Sending SUCCESS response (200).`);
+        res.status(200).json(updatedMember); // <<< RESPONSE SENT?
+
+    } catch (error: any) {
+         console.error(`${logPrefix} !!! Prisma/DB Error updating member:`, error);
+         // Handle specific Prisma error if record to update is not found
+         // @ts-ignore
+         if (error.code === 'P2025') { // Prisma code for 'Record to update not found'
+             console.log(`<span class="math-inline">\{logPrefix\} FAIL \- Member not found in DB\: ID\=</span>{id}`);
+             return res.status(404).json({ message: 'Member not found' });
+        }
+        // Handle other potential errors
+        res.status(500).json({ message: 'Error updating member in database' });
+    }
+     console.log(`[<span class="math-inline">\{controllerStartTime\.toISOString\(\)\}\] \-\-\- Finished PUT /api/members/</span>{id} ---`); // Log end
+};
 
 // --- DELETE a Member (Detailed Logging) ---
 export const deleteMember = async (req: Request, res: Response) => {

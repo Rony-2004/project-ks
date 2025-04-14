@@ -62,20 +62,44 @@ export const addMember = async (data: NewMemberData): Promise<MemberData> => {
 
 // --- Function to UPDATE a Member ---
 export const updateMember = async (id: string, data: UpdateMemberData): Promise<MemberData> => {
+    const SERVICE_NAME = '[MemberService updateMember]';
+    if (!id) {
+        console.error(`${SERVICE_NAME} Error: Missing ID for update.`);
+        throw new Error('Member ID is required for update.');
+    }
     try {
-        console.log(`Service: Updating member ID ${id} with data:`, data);
+        console.log(`${SERVICE_NAME} Updating ID ${id} with data:`, data);
+        // Prepare payload - ensure amount is number if present
         const payload = { ...data };
         if (payload.monthlyAmount !== undefined && payload.monthlyAmount !== null) {
-            payload.monthlyAmount = Number(payload.monthlyAmount) || 0;
+            const numAmount = Number(payload.monthlyAmount);
+            if (isNaN(numAmount)) {
+                 console.error(`${SERVICE_NAME} Error: Invalid monthly amount format:`, payload.monthlyAmount);
+                 throw new Error('Invalid number format for monthly amount.');
+            }
+            payload.monthlyAmount = numAmount;
+        } else {
+            // If explicitly passed as undefined maybe remove it? Or backend handles undefined fields.
+            // Let's remove it if it wasn't provided or was invalid before Number conversion
+            if (data.monthlyAmount === undefined) delete payload.monthlyAmount;
         }
+
+        console.log(`<span class="math-inline">\{SERVICE\_NAME\} Attempting PUT to /members/</span>{id} with payload:`, payload);
+        // Using apiClient which includes token
         const response = await apiClient.put<MemberData>(`/members/${id}`, payload);
-        console.log('Service: Updated member successfully:', response.data);
+        console.log(`<span class="math-inline">\{SERVICE\_NAME\} Success response received\: Status\=</span>{response.status}, Data:`, response.data);
+        if (!response.data?.id) {
+            console.error(`${SERVICE_NAME} Error: Invalid data received after update.`);
+            throw new Error("Invalid data received after updating member.");
+        }
         return response.data;
     } catch (error: any) {
-        console.error('Service: Error updating member:', error.response?.data || error.message);
-        throw new Error(error.response?.data?.message || 'Failed to update member.');
+        // Log detailed error info and throw a clean message
+        console.error(`<span class="math-inline">\{SERVICE\_NAME\} Error caught\: Status\=</span>{error.response?.status}, Data=`, error.response?.data || error.message || error);
+        throw new Error(error.response?.data?.message || 'Failed to update member.'); // Always throw
     }
 };
+
 
 
 // --- Function to DELETE a Member ---
