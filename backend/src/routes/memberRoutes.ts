@@ -1,4 +1,4 @@
-// backend/src/routes/memberRoutes.ts
+// backend/src/routes/memberRoutes.ts (VERIFIED)
 import express from 'express';
 import {
     getAllMembers,
@@ -6,27 +6,24 @@ import {
     updateMember,
     deleteMember
 } from '../controllers/memberController';
-import { protect, restrictTo } from '../middleware/authMiddleware'; // Import middleware
+import { protect, restrictTo } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
 // Apply middleware to protect ALL member routes below
-// Only logged-in Admins can manage members via these routes
 router.use(protect);
-router.use(restrictTo('admin'));
+// Allow ONLY admin to Create, Update, Delete members via these routes for now
+router.use(restrictTo('admin')); // Use lowercase string 'admin'
 
-// Route for GET all members and POST new member
+// Route for GET all members (filtered by controller) and POST new member
 router.route('/')
-    .get(getAllMembers)
-    .post(createMember);
+    .get(getAllMembers) // Controller handles role filtering
+    .post(createMember); // Restricted to admin by middleware above
 
 // Route for specific member operations by ID
 router.route('/:id')
-    // .get(getMemberById) // Add later if needed
-    .put(updateMember)
-    .delete(deleteMember);
-
-// Add routes for assigning members later if needed
-// Example: router.put('/:id/assign', assignMemberToAreaAdmin);
+    // .get(getMemberById) // Restricted to admin
+    .put(updateMember)    // Restricted to admin
+    .delete(deleteMember); // Restricted to admin
 
 export default router;

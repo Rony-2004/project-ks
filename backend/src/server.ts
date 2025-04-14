@@ -4,7 +4,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import areaAdminRoutes from './routes/areaAdminRoutes';
-import memberRoutes from './routes/memberRoutes'; // <-- Import Member routes
+import memberRoutes from './routes/memberRoutes';
+import paymentRoutes from './routes/paymentRoutes'; // <-- Import Payment routes
 
 dotenv.config();
 const app = express();
@@ -19,15 +20,12 @@ app.use(express.urlencoded({ extended: true }));
 // Use Routes
 app.use(`${API_PREFIX}/auth`, authRoutes);
 app.use(`${API_PREFIX}/area-admins`, areaAdminRoutes);
-app.use(`${API_PREFIX}/members`, memberRoutes); // <-- Use Member routes
-console.log(`Member routes mounted at ${API_PREFIX}/members`);
+app.use(`${API_PREFIX}/members`, memberRoutes);
+app.use(`${API_PREFIX}/payments`, paymentRoutes); // <-- Use Payment routes
+console.log(`Payment routes mounted at ${API_PREFIX}/payments`); // Log mounting
 
 // Test Route
-app.get('/', (req: Request, res: Response) => {
-    res.send('Backend is Running!');
-});
+app.get('/', (req: Request, res: Response) => { res.send('Backend is Running!'); });
 
 // Start Server
-app.listen(PORT, () => {
-    console.log(`Backend server running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => { console.log(`Backend server running on http://localhost:${PORT}`); });

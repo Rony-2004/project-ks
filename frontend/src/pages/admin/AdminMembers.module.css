@@ -216,3 +216,30 @@
   
   .modalContent h3 { margin-top: 0; margin-bottom: 1.8rem; color: #111827; font-size: 1.5rem;}
   .modalActions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; }
+  /* Add to frontend/src/pages/admin/AdminMembers.module.css or similar */
+
+/* Basic Select Styling (if needed) */
+.formGroup select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  background-color: #f9fafb;
+  color: #1f2937;
+  cursor: pointer;
+}
+.formGroup select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.paymentForm { /* Add specific styles for payment form layout if needed */
+  /* Example styles */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

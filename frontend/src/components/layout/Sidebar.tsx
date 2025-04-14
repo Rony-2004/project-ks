@@ -1,47 +1,67 @@
-// src/components/layout/Sidebar.tsx
+// frontend/src/components/layout/Sidebar.tsx (MODIFIED)
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext'; // Adjust path if needed
-// Import icons (make sure react-icons is installed: npm install react-icons)
-import { FaTachometerAlt, FaUsers, FaUserTie, FaMoneyBillWave, FaSignOutAlt, FaCog } from 'react-icons/fa';
+import { useAuth } from '../../contexts/AuthContext'; // Need role from context
+// Import ALL possible icons needed for both roles
+import {
+    FaTachometerAlt, FaUsers, FaUserTie, FaMoneyBillWave, FaSignOutAlt,
+    FaUserCog, FaListAlt // Add any icons needed for Area Admin
+} from 'react-icons/fa';
 import styles from './Sidebar.module.css';
 
+interface NavItem {
+  path: string;
+  icon: React.ReactElement;
+  label: string;
+  roles: ('admin' | 'areaAdmin')[]; // Which roles see this link
+  end?: boolean; // For NavLink 'end' prop
+}
+
 const Sidebar: React.FC = () => {
-  const { logout } = useAuth();
+  const { userRole, logout } = useAuth(); // Get userRole
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    navigate('/login'); // Redirect to role selection after logout
+    navigate('/login');
   };
 
-  // Define navigation items
-  const navItems = [
-    { path: '/admin/dashboard', icon: <FaTachometerAlt />, label: 'Overview' },
-    { path: '/admin/dashboard/members', icon: <FaUsers />, label: 'Members' },
-    { path: '/admin/dashboard/area-admins', icon: <FaUserTie />, label: 'Area Admins' },
-    { path: '/admin/dashboard/payments', icon: <FaMoneyBillWave />, label: 'Payments' },
-    // Add more links as needed
-    // { path: '/admin/dashboard/settings', icon: <FaCog />, label: 'Settings' },
+  // Define ALL possible navigation items
+  const allNavItems: NavItem[] = [
+    // Admin Links
+    { path: '/admin/dashboard', icon: <FaTachometerAlt />, label: 'Overview', roles: ['admin'], end: true },
+    { path: '/admin/dashboard/members', icon: <FaUsers />, label: 'Members', roles: ['admin'] },
+    { path: '/admin/dashboard/area-admins', icon: <FaUserTie />, label: 'Area Admins', roles: ['admin'] },
+    { path: '/admin/dashboard/payments', icon: <FaMoneyBillWave />, label: 'Payments', roles: ['admin'] },
+    // Area Admin Links
+    { path: '/area-admin/dashboard', icon: <FaListAlt />, label: 'My Members', roles: ['areaAdmin'], end: true },
+    // Add more Area Admin links later, e.g., mark payments
+    // { path: '/area-admin/dashboard/payments', icon: <FaMoneyBillWave />, label: 'Record Payments', roles: ['areaAdmin'] },
   ];
+
+  // Filter items based on current user's role
+  const visibleNavItems = allNavItems.filter(item => userRole && item.roles.includes(userRole as 'admin' | 'areaAdmin'));
+
+  // Determine Panel Title
+  const panelTitle = userRole === 'admin' ? 'Admin Panel' : userRole === 'areaAdmin' ? 'Area Panel' : 'Panel';
 
   return (
     <aside className={styles.sidebar}>
       <div className={styles.brand}>
         KHANKA SHARIF
-        <span className={styles.panelType}>Admin Panel</span>
+        <span className={styles.panelType}>{panelTitle}</span>
       </div>
       <nav className={styles.nav}>
         <ul>
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <li key={item.path}>
-              {/* Use NavLink for active state styling */}
               <NavLink
                 to={item.path}
                 className={({ isActive }) =>
                   isActive ? `${styles.navLink} ${styles.active}` : styles.navLink
                 }
-                end // Use 'end' for Overview link to only match exact path
+                // Use 'end' prop if specified (important for index routes)
+                end={item.end}
               >
                 <span className={styles.icon}>{item.icon}</span>
                 {item.label}
