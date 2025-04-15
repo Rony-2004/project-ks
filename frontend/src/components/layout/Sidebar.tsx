@@ -1,24 +1,24 @@
-// frontend/src/components/layout/Sidebar.tsx (MODIFIED)
+// frontend/src/components/layout/Sidebar.tsx (Includes Payment History Link)
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext'; // Need role from context
-// Import ALL possible icons needed for both roles
+import { useAuth } from '../../contexts/AuthContext'; // Verify path
+// Import ALL needed icons
 import {
     FaTachometerAlt, FaUsers, FaUserTie, FaMoneyBillWave, FaSignOutAlt,
-    FaUserCog, FaListAlt // Add any icons needed for Area Admin
-} from 'react-icons/fa';
-import styles from './Sidebar.module.css';
+    FaListAlt, FaHistory // <-- Added FaHistory
+} from 'react-icons/fa'; // Removed FaUserCog as it wasn't used
+import styles from './Sidebar.module.css'; // Verify path
 
 interface NavItem {
   path: string;
   icon: React.ReactElement;
   label: string;
-  roles: ('admin' | 'areaAdmin')[]; // Which roles see this link
-  end?: boolean; // For NavLink 'end' prop
+  roles: ('admin' | 'areaAdmin')[];
+  end?: boolean;
 }
 
 const Sidebar: React.FC = () => {
-  const { userRole, logout } = useAuth(); // Get userRole
+  const { userRole, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -33,10 +33,12 @@ const Sidebar: React.FC = () => {
     { path: '/admin/dashboard/members', icon: <FaUsers />, label: 'Members', roles: ['admin'] },
     { path: '/admin/dashboard/area-admins', icon: <FaUserTie />, label: 'Area Admins', roles: ['admin'] },
     { path: '/admin/dashboard/payments', icon: <FaMoneyBillWave />, label: 'Payments', roles: ['admin'] },
+
     // Area Admin Links
     { path: '/area-admin/dashboard', icon: <FaListAlt />, label: 'My Members', roles: ['areaAdmin'], end: true },
-    // Add more Area Admin links later, e.g., mark payments
-    // { path: '/area-admin/dashboard/payments', icon: <FaMoneyBillWave />, label: 'Record Payments', roles: ['areaAdmin'] },
+    // --- ADDED PAYMENT HISTORY LINK ---
+    { path: '/area-admin/dashboard/history', icon: <FaHistory />, label: 'Payment History', roles: ['areaAdmin'] },
+    // --- END ADDED LINK ---
   ];
 
   // Filter items based on current user's role
@@ -60,8 +62,7 @@ const Sidebar: React.FC = () => {
                 className={({ isActive }) =>
                   isActive ? `${styles.navLink} ${styles.active}` : styles.navLink
                 }
-                // Use 'end' prop if specified (important for index routes)
-                end={item.end}
+                end={item.end ?? false} // Use end prop, provide default
               >
                 <span className={styles.icon}>{item.icon}</span>
                 {item.label}

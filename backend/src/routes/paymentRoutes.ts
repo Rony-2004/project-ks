@@ -1,21 +1,36 @@
-// backend/src/routes/paymentRoutes.ts (VERIFY THIS CODE)
+// backend/src/routes/paymentRoutes.ts (ADDED PUT and DELETE routes)
 import express from 'express';
-import { recordPayment } from '../controllers/paymentController'; // Verify path
+import {
+    recordPayment,
+    getPaymentsForAreaAdmin,
+    updatePayment,           // <-- Import update handler
+    deletePayment            // <-- Import delete handler
+} from '../controllers/paymentController'; // Verify path
 import { protect, restrictTo } from '../middleware/authMiddleware'; // Verify path
-// Removed UserRole import as we use strings now
-// import { UserRole } from '@prisma/client';
 
 const router = express.Router();
 
-// Protect all payment routes defined below
-router.use(protect); // Must be logged in
+// --- Apply protect middleware to ALL payment routes below ---
+// User must be logged in for any payment action
+router.use(protect);
 
-// Define POST route for recording payments
-// Only Area Admins can access this specific route
-// Ensure 'areaAdmin' is lowercase string
-router.post('/', restrictTo('areaAdmin'), recordPayment); // <-- Check this line carefully
+// --- Define Routes ---
 
-// Add other payment routes later
-// router.get('/', restrictTo('admin', 'areaAdmin'), getAllPayments);
+// POST /api/payments - Record a new payment (Area Admin only)
+router.post('/', restrictTo('areaAdmin'), recordPayment);
+
+// GET /api/payments/my-area - Get payments recorded by logged-in Area Admin
+router.get('/my-area', restrictTo('areaAdmin'), getPaymentsForAreaAdmin);
+
+// **NEW** Routes for operating on a specific payment by its ID
+router.route('/:paymentId') // Use a parameter name like :paymentId
+    // PUT /api/payments/:paymentId - Update a specific payment (Area Admin only)
+    .put(restrictTo('areaAdmin'), updatePayment)
+
+    // DELETE /api/payments/:paymentId - Delete a specific payment (Area Admin only)
+    .delete(restrictTo('areaAdmin'), deletePayment);
+
+// Add GET / route for Admin later if needed
+// router.get('/', restrictTo('admin'), getAllPaymentsAdmin);
 
 export default router;

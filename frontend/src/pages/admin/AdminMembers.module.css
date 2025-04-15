@@ -270,3 +270,64 @@
   transform: translateY(-50%); color: #9ca3af; font-size: 1rem;
   pointer-events: none;
 }
+/* Add/Verify in your CSS Module */
+
+/* --- Filter Controls Styles --- */
+.controlsContainer { /* Optional: New container for layout */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-end; /* Align items to bottom */
+  margin-bottom: 1.5rem;
+}
+
+.filterContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem; /* Space between filter inputs */
+  padding: 0.8rem 1rem; /* Adjust padding */
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  flex-grow: 1; /* Allow filters to take space */
+}
+
+.filterContainer .formGroup {
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 150px; /* Adjust base size */
+}
+.filterContainer .formGroup label {
+  margin-bottom: 0.4rem; font-size: 0.8rem; color: #4b5563; font-weight: 500;
+}
+.filterContainer select,
+.filterContainer input[type="number"] {
+ width: 100%; padding: 0.6rem 0.8rem; border: 1px solid #d1d5db;
+ border-radius: 6px; font-size: 0.95rem; box-sizing: border-box; background-color: white;
+}
+.filterContainer select { cursor: pointer; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.6-3.6%205.4-7.9%205.4-12.9%200-5-1.9-9.2-5.5-12.7z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right .7em top 50%; background-size: .65em auto; padding-right: 2.5em; }
+.filterContainer select:focus,
+.filterContainer input[type="number"]:focus {
+  outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+.yearFilterGroup { display: flex; align-items: center; gap: 0.5rem; }
+.clearButton {
+  margin-left: 0.5rem; /* Or use gap in parent */
+  padding: 0.2rem 0.5rem; font-size: 0.75rem; color: #6b7280; background: none;
+  border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer; flex-shrink: 0;
+}
+.clearButton:hover { background-color: #e5e7eb; }
+
+
+/* --- Search Bar Styles --- */
+.searchContainer {
+  max-width: 350px; /* Adjust width */
+  position: relative;
+  flex-grow: 1; /* Allow search to take space */
+   margin-bottom: 0; /* Align with filters */
+}
+.searchInput { width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; box-sizing: border-box; transition: border-color 0.2s ease, box-shadow 0.2s ease; background-color: white; }
+.searchInput:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
+.searchInput::placeholder { color: #9ca3af; font-style: italic; }
+.searchIcon { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 1rem; pointer-events: none; }
