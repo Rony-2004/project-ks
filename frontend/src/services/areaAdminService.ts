@@ -1,4 +1,4 @@
-// frontend/src/services/areaAdminService.ts (UPDATED for Area Relations)
+// frontend/src/services/areaAdminService.ts (Final Version)
 import apiClient from '../utils/apiClient'; // Use our authenticated client
 
 // --- Interfaces ---
@@ -17,9 +17,8 @@ export interface AreaAdminData {
   phone: string | null; // Use correct type from schema
   createdAt: string;
   updatedAt: string;
-  // areaName?: string; // REMOVED
   // This array holds the areas assigned to this admin
-  assignedAreas?: BasicArea[]; // <-- ADDED: Expect an array of assigned areas
+  assignedAreas?: BasicArea[]; // Expect an array of assigned areas
 }
 
 // Interface for CREATING a new Area Admin (data SENT TO backend)
@@ -28,8 +27,7 @@ export interface NewAreaAdminData {
     email: string;
     phone?: string | null; // Optional
     password?: string; // Required for creation
-    // areaName?: string; // REMOVED
-    assignedAreaIds?: string[]; // <-- ADDED: Array of Area IDs to assign
+    assignedAreaIds?: string[]; // Array of Area IDs to assign
 }
 
 // Interface for UPDATING an Area Admin (data SENT TO backend)
@@ -37,9 +35,8 @@ export interface UpdateAreaAdminData {
     name?: string;
     email?: string;
     phone?: string | null;
-    // areaName?: string; // REMOVED
-    assignedAreaIds?: string[]; // <-- ADDED: Full array of IDs to set for update
-    // Password updates should be handled separately
+    assignedAreaIds?: string[]; // Full array of IDs to set for update
+    password?: string;          // <-- Field for optional password update
 }
 
 
@@ -52,8 +49,8 @@ export const getAreaAdmins = async (): Promise<AreaAdminData[]> => {
         console.log(`${SERVICE_NAME} Fetching...`);
         // Backend now includes assignedAreas if select/include is used in controller
         const response = await apiClient.get<AreaAdminData[]>('/area-admins');
-        console.log(`${SERVICE_NAME} Fetched ${response.data?.length} area admins.`);
-        return response.data ?? [];
+        console.log(`${SERVICE_NAME} Fetched ${response.data?.length ?? 'N/A'} area admins.`); // Safe length check
+        return response.data ?? []; // Return empty array if data is null/undefined
     } catch (error: any) {
         console.error(`${SERVICE_NAME} Error caught:`, error.response?.data || error.message);
         throw new Error(error.response?.data?.message || 'Failed to fetch area admins.');
@@ -65,11 +62,13 @@ export const addAreaAdmin = async (data: NewAreaAdminData): Promise<AreaAdminDat
      const SERVICE_NAME = '[AreaAdminService addAreaAdmin]';
      try {
         console.log(`${SERVICE_NAME} Sending data:`, data);
-        // Prepare payload - include assignedAreaIds, remove areaName if present
-        const { areaName, ...payload } = { // Destructure to easily remove areaName if it was accidentally passed
+        // Prepare payload - ensure assignedAreaIds is an array
+        const payload = {
             ...data,
             assignedAreaIds: data.assignedAreaIds || [] // Ensure it's at least an empty array
         };
+        // Remove areaName if accidentally passed (though interface doesn't have it)
+        // delete (payload as any).areaName;
 
         console.log(`${SERVICE_NAME} Attempting POST to /area-admins with payload:`, payload);
         const response = await apiClient.post<AreaAdminData>('/area-admins', payload);
@@ -82,7 +81,7 @@ export const addAreaAdmin = async (data: NewAreaAdminData): Promise<AreaAdminDat
     }
 };
 
-// DELETE an Area Admin (No change needed)
+// DELETE an Area Admin
 export const deleteAreaAdmin = async (id: string): Promise<void> => {
      const SERVICE_NAME = '[AreaAdminService deleteAreaAdmin]';
     try {
@@ -90,8 +89,8 @@ export const deleteAreaAdmin = async (id: string): Promise<void> => {
         await apiClient.delete(`/area-admins/${id}`);
         console.log(`${SERVICE_NAME} DELETE request successful`);
     } catch (error: any) {
-         console.error(`${SERVICE_NAME} Error caught:`, error.response?.data || error.message);
-         throw new Error(error.response?.data?.message || 'Failed to delete area admin.');
+        console.error(`${SERVICE_NAME} Error caught:`, error.response?.data || error.message);
+        throw new Error(error.response?.data?.message || 'Failed to delete area admin.');
     }
 };
 
@@ -100,18 +99,20 @@ export const updateAreaAdmin = async (id: string, data: UpdateAreaAdminData): Pr
      const SERVICE_NAME = '[AreaAdminService updateAreaAdmin]';
      if (!id) { throw new Error('Area Admin ID is required for update.'); }
      try {
-        console.log(`${SERVICE_NAME} Updating ID ${id} with data:`, data);
-         // Prepare payload - include assignedAreaIds if provided, ensure areaName is not sent
-        const { areaName, ...payload } = {
+        // Log carefully, avoid logging password if present in 'data'
+        console.log(`${SERVICE_NAME} Updating ID ${id} with data:`, { ...data, password: data.password ? '******' : undefined });
+
+        // Prepare payload - Ensure assignedAreaIds is included if passed, remove areaName just in case
+         const { areaName, ...payload } = {
              ...data,
-             // Ensure assignedAreaIds is included if it was passed in data
              assignedAreaIds: data.assignedAreaIds !== undefined ? data.assignedAreaIds : undefined
          };
-         // Remove fields with undefined value before sending if necessary (axios usually handles this)
-         Object.keys(payload).forEach(key => payload[key as keyof typeof payload] === undefined && delete payload[key as keyof typeof payload]);
+         // Optional: Remove undefined keys before sending (axios might handle this)
+         // Object.keys(payload).forEach(key => payload[key as keyof typeof payload] === undefined && delete payload[key as keyof typeof payload]);
 
-        console.log(`${SERVICE_NAME} Attempting PUT to /area-admins/${id} with payload:`, payload);
-        const response = await apiClient.put<AreaAdminData>(`/area-admins/${id}`, payload);
+        // Log the payload actually being sent (mask password)
+        console.log(`${SERVICE_NAME} Attempting PUT to /area-admins/${id} with payload:`, { ...payload, password: payload.password ? '******' : undefined });
+        const response = await apiClient.put<AreaAdminData>(`/area-admins/${id}`, payload); // Send payload which might include password
         console.log(`${SERVICE_NAME} Update successful: Status=${response.status}, Data:`, response.data);
         if (!response.data?.id) { throw new Error("Invalid data received after updating area admin."); }
         return response.data; // Return updated data including assignedAreas
@@ -121,5 +122,5 @@ export const updateAreaAdmin = async (id: string, data: UpdateAreaAdminData): Pr
     }
 };
 
-// Add getAreaAdminById service function later if needed for Edit modal prefill with areas
-// export const getAreaAdminById = async (id: string): Promise<AreaAdminData> => { ... }
+// Optional: Add getAreaAdminById service function if needed later
+// export const getAreaAdminById = async (id: string): Promise<AreaAdminData> => { /* ... */ }
