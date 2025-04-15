@@ -5,7 +5,8 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
 import areaAdminRoutes from './routes/areaAdminRoutes';
 import memberRoutes from './routes/memberRoutes';
-import paymentRoutes from './routes/paymentRoutes'; // <-- Import Payment routes
+import paymentRoutes from './routes/paymentRoutes';
+import areaRoutes from './routes/areaRoutes'; // <-- 1. Import Area routes
 
 dotenv.config();
 const app = express();
@@ -19,10 +20,12 @@ app.use(express.urlencoded({ extended: true }));
 
 // Use Routes
 app.use(`${API_PREFIX}/auth`, authRoutes);
-app.use(`${API_PREFIX}/area-admins`, areaAdminRoutes);
+app.use(`${API_PREFIX}/area-admins`, areaAdminRoutes); // Routes for managing Area Admins themselves
 app.use(`${API_PREFIX}/members`, memberRoutes);
-app.use(`${API_PREFIX}/payments`, paymentRoutes); // <-- Use Payment routes
-console.log(`Payment routes mounted at ${API_PREFIX}/payments`); // Log mounting
+app.use(`${API_PREFIX}/payments`, paymentRoutes);
+app.use(`${API_PREFIX}/areas`, areaRoutes); // <-- 2. Use Area routes
+console.log(`Area routes mounted at ${API_PREFIX}/areas`); // Log mounting
+
 
 // Test Route
 app.get('/', (req: Request, res: Response) => { res.send('Backend is Running!'); });

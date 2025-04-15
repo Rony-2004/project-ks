@@ -1,4 +1,4 @@
-// backend/prisma/schema.prisma
+// backend/prisma/schema.prisma (UPDATED with Area Model & Relations)
 
 generator client {
   provider = "prisma-client-js"
@@ -6,24 +6,45 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL") // Reads Supabase URL from .env
 }
 
-// User Model (Admin and Area Admins)
-model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String
-  phone         String?
-  role          UserRole
-  passwordHash  String
-  areaName      String?   // Only for AreaAdmins
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+// --- **NEW** Area Model ---
+model Area {
+  id        String   @id @default(cuid())
+  name      String   @unique // The address/locality name, must be unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  assignedMembers Member[]  @relation("AreaAdminMembers")
-  // --- ADD RELATION TO PAYMENTS RECORDED BY THIS USER ---
+  // --- Relations ---
+  // Area Admins assigned to this Area (Many-to-Many setup below)
+  assignedUsers User[] @relation("AreaAssignments")
+  // Members belonging to this Area (One-to-Many)
+  members       Member[]
+
+  @@map("areas") // Maps to 'areas' table
+}
+
+
+// --- User Model (Admin and Area Admins) ---
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  phone        String?
+  role         UserRole
+  passwordHash String
+  // areaName     String?   // <-- REMOVED this field
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // --- Relations ---
+  // Which Members are assigned to this User (if AreaAdmin)
+  assignedMembers Member[] @relation("AreaAdminMembers")
+  // Which Payments were recorded by this User
   recordedPayments Payment[] @relation("Recorder")
+  // Which Areas is this User (if AreaAdmin) assigned to (Many-to-Many)
+  assignedAreas   Area[]   @relation("AreaAssignments") // <-- ADDED Relation to Areas
 
   @@map("users")
 }
@@ -33,51 +54,55 @@ enum UserRole {
   AreaAdmin
 }
 
-// Member Model
+// --- Member Model ---
 model Member {
   id                  String    @id @default(cuid())
   name                String
   phone               String
-  address             String
+  // address          String    // <-- REMOVED this field
   monthlyAmount       Float
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  // Relation to assigned Area Admin
+  // Relation to assigned Area Admin (User)
   assignedAreaAdminId String?
   assignedAreaAdmin   User?     @relation("AreaAdminMembers", fields: [assignedAreaAdminId], references: [id])
 
-  // --- ADD RELATION TO PAYMENTS MADE BY THIS MEMBER ---
+  // --- Relation to specific Area ---
+  areaId              String    // <-- ADDED Foreign Key (Required)
+  area                Area      @relation(fields: [areaId], references: [id]) // <-- ADDED Relation Field
+  // --- End Area Relation ---
+
+  // Relation to Payments
   payments            Payment[] @relation("MemberPayments")
 
   @@map("members")
 }
 
 
-// --- **NEW** Payment Model ---
+// --- Payment Model (Keep as is) ---
 model Payment {
   id              String        @id @default(cuid())
-  amountPaid      Float         // How much was paid
-  paymentDate     DateTime      // When the payment was actually made/recorded
-  paymentMonth    Int           // e.g., 1 for January, 12 for December
-  paymentYear     Int           // e.g., 2024
-  paymentMethod   PaymentMethod // 'Cash' or 'Online'
+  amountPaid      Float
+  paymentDate     DateTime
+  paymentMonth    Int
+  paymentYear     Int
+  paymentMethod   PaymentMethod
   createdAt       DateTime      @default(now())
-  // Optional: Add updatedAt if payments can be edited
-  // updatedAt    DateTime      @updatedAt
 
-  // --- Relations ---
-  memberId        String        // Foreign key linking to the Member who paid
-  member          Member        @relation("MemberPayments", fields: [memberId], references: [id], onDelete: Cascade) // Link to Member model (Cascade means delete payments if member deleted)
+  // Relations
+  memberId        String
+  member          Member        @relation("MemberPayments", fields: [memberId], references: [id], onDelete: Cascade)
+  recordedById    String
+  recordedBy      User          @relation("Recorder", fields: [recordedById], references: [id])
 
-  recordedById    String        // Foreign key linking to the User (AreaAdmin) who recorded it
-  recordedBy      User          @relation("Recorder", fields: [recordedById], references: [id]) // Link to User model
-
-  @@map("payments") // Maps to 'payments' table
+  @@map("payments")
 }
 
-// Enum for Payment Method
 enum PaymentMethod {
   Cash
   Online
 }
+
+// Prisma automatically creates the join table for the Many-to-Many
+// relation between User and Area specified by @relation("AreaAssignments")

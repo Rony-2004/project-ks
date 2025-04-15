@@ -1,74 +1,67 @@
-// frontend/src/App.tsx (VERIFIED - Includes all routes)
+// frontend/src/App.tsx (MODIFIED)
 import React from 'react';
-import { Routes, Route } from 'react-router-dom'; // Keep these imports
+import { Routes, Route } from 'react-router-dom';
 
-// --- Page Components (Ensure all these files exist and export correctly) ---
+// --- Page Components ---
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import AdminSignInPage from './pages/AdminSignInPage';
 import AreaAdminSignInPage from './pages/AreaAdminSignInPage';
-import AdminDashboardPage from './pages/AdminDashboardPage';   // Admin layout component
-import AreaAdminDashboardPage from './pages/AreaAdminDashboardPage'; // Area Admin layout component
-
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AreaAdminDashboardPage from './pages/AreaAdminDashboardPage';
 
 // --- Admin Dashboard Section Components ---
 import AdminOverview from './pages/admin/AdminOverview';
 import AdminMembers from './pages/admin/AdminMembers';
 import AdminAreaAdmins from './pages/admin/AdminAreaAdmins';
 import AdminPayments from './pages/admin/AdminPayments';
+import ManageAreas from './pages/admin/ManageAreas';
 
 // --- Area Admin Section Components ---
-import AreaAdminMyMembers from './pages/area-admin/AreaAdminMyMembers';     // Area Admin Members list
-import AreaAdminPaymentHistory from './pages/area-admin/AreaAdminPaymentHistory'; // <-- Area Admin Payment History page
+import AreaAdminMyMembers from './pages/area-admin/AreaAdminMyMembers';
+import AreaAdminPaymentHistory from './pages/area-admin/AreaAdminPaymentHistory';
 
 // --- Auth Wrapper ---
-import ProtectedRoute from './components/auth/ProtectedRoute'; // Verify path
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
-import './App.css'; // Main app styles
+import './App.css';
 
 function App() {
-  // NO BrowserRouter should be here - MUST be in main.tsx
-  return (
-      <Routes>
-        {/* --- Public Routes --- */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/admin/signin" element={<AdminSignInPage />} />
-        <Route path="/area-admin/signin" element={<AreaAdminSignInPage />} />
+    return (
+        <Routes>
+            {/* --- Public Routes --- */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/admin/signin" element={<AdminSignInPage />} />
+            <Route path="/area-admin/signin" element={<AreaAdminSignInPage />} />
 
-        {/* --- Protected Admin Routes --- */}
-        <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-          <Route path="/admin/dashboard" element={<AdminDashboardPage />}> {/* Admin Layout */}
-            {/* Nested Admin pages render in Outlet */}
-            <Route index element={<AdminOverview />} />
-            <Route path="members" element={<AdminMembers />} />
-            <Route path="area-admins" element={<AdminAreaAdmins />} />
-            <Route path="payments" element={<AdminPayments />} />
-            {/* Add more nested admin routes here */}
-          </Route>
-          {/* Add other top-level admin-only routes here */}
-        </Route>
+            {/* --- Protected Admin Routes --- */}
+            <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                <Route path="/admin/dashboard" element={<AdminDashboardPage />}> {/* Admin Layout */}
+                    {/* Nested Admin pages render in Outlet */}
+                    <Route index element={<AdminOverview />} />
+                    <Route path="members" element={<AdminMembers />} />
+                    <Route path="area-admins" element={<AdminAreaAdmins />} />
+                    <Route path="payments" element={<AdminPayments />} />
+                    {/* --- ** 2. Add Manage Areas Route ** --- */}
+                    <Route path="areas" element={<ManageAreas />} />
+                    {/* --- End Add Manage Areas Route --- */}
+                </Route>
+            </Route>
 
-        {/* --- Protected Area Admin Routes --- */}
-        <Route element={<ProtectedRoute allowedRoles={['areaAdmin']} />}>
-          {/* This Route uses the Area Admin Layout */}
-          <Route path="/area-admin/dashboard" element={<AreaAdminDashboardPage />}>
-             {/* Nested Area Admin pages render in Outlet */}
-             <Route index element={<AreaAdminMyMembers />} /> {/* Default view */}
-             {/* --- THIS IS THE ROUTE FOR PAYMENT HISTORY --- */}
-             <Route path="history" element={<AreaAdminPaymentHistory />} />
-             {/* --- END PAYMENT HISTORY ROUTE --- */}
-             {/* Add other nested area admin routes here */}
-          </Route>
-           {/* Add other top-level area-admin-only routes here */}
-        </Route>
+            {/* --- Protected Area Admin Routes --- */}
+            <Route element={<ProtectedRoute allowedRoles={['areaAdmin']} />}>
+                <Route path="/area-admin/dashboard" element={<AreaAdminDashboardPage />}>
+                    <Route index element={<AreaAdminMyMembers />} />
+                    <Route path="history" element={<AreaAdminPaymentHistory />} />
+                </Route>
+            </Route>
 
-        {/* --- Not Found Route --- */}
-       
+            {/* --- Not Found Route --- */}
+            {/* <Route path="*" element={<NotFoundPage />} /> */}
 
-      </Routes>
-  );
-  // NO closing </BrowserRouter> here
+        </Routes>
+    );
 }
 
 export default App;
