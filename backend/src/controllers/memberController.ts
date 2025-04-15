@@ -147,4 +147,45 @@ export const updateMember = async (req: Request, res: Response) => {
 
 // --- Controller to DELETE a Member ---
 // (No changes needed here based on schema update)
-export const deleteMember = async (req: Request, res: Response) => { /* ... Keep existing Prisma code ... */ };
+// --- Controller to DELETE a Member ---
+export const deleteMember = async (req: Request, res: Response) => {
+    const { id } = req.params; // Get the ID from the URL parameter
+    const logPrefix = `[${new Date().toISOString()}] deleteMember (ID: ${id}):`;
+    console.log(`${logPrefix} --- Received DELETE /api/members/${id} ---`);
+
+    if (!id) {
+        console.log(`${logPrefix} FAIL Validation: Missing ID.`);
+        return res.status(400).json({ message: "Member ID parameter is required." });
+    }
+
+    try {
+        console.log(`${logPrefix} Attempting prisma.member.delete({ where: { id: ${id} } })...`);
+
+        // Use Prisma to delete the member by its unique ID
+        await prisma.member.delete({
+            where: { id: id },
+        });
+
+        console.log(`${logPrefix} Prisma delete successful for ID: ${id}.`);
+        console.log(`${logPrefix} Sending SUCCESS response (204 No Content).`);
+
+        // Send HTTP 204 No Content status for successful DELETE requests
+        // It indicates success but that there's no response body to send.
+        res.status(204).send();
+
+    } catch (error: any) {
+        // Prisma throws an error if the record to delete doesn't exist (P2025)
+        // Check for this specific error code for a better 404 response
+        // @ts-ignore - Prisma errors often have a 'code' property, ignore TS warning here if needed
+        if (error.code === 'P2025') {
+            console.log(`${logPrefix} Prisma Error P2025: Record to delete not found.`);
+            return res.status(404).json({ message: 'Member not found' }); // Specific error for not found
+        }
+
+        // Log any other unexpected errors
+        console.error(`${logPrefix} !!! Prisma/DB Error deleting member:`, error);
+        // Send a generic server error response
+        res.status(500).json({ message: 'Error deleting member in database' });
+    }
+     console.log(`${logPrefix} --- Finished DELETE /api/members/${id} ---`);
+};

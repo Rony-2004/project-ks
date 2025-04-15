@@ -1,4 +1,4 @@
-// frontend/src/pages/admin/AdminMembers.tsx (UPDATED for Area Relation)
+// frontend/src/pages/admin/AdminMembers.tsx (FULL CODE with ONLY handleDelete Logs Added)
 import React, { useState, useEffect, FormEvent, useMemo, ChangeEvent } from 'react';
 import {
     getMembers, addMember, deleteMember, updateMember,
@@ -76,52 +76,66 @@ const AdminMembers: React.FC = () => {
     // --- Handlers ---
     const handleAddSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        // ** Validate Area ID selection **
         if (!newAreaId) {
             setFormError('Please select an Area.');
             return;
         }
         setFormError(null); setFormSuccess(null); setIsSubmitting(true);
-
-        // ** CHANGED: Use newAreaId, remove newAddress **
         const newMemberData: NewMemberData = {
             name: newName,
             phone: newPhone,
             monthlyAmount: newAmount,
-            areaId: newAreaId, // Send the selected Area ID
+            areaId: newAreaId,
             assignedAreaAdminId: newAssignedId || null
         };
-
         try {
             await addMember(newMemberData);
             setFormSuccess('Member added successfully!');
-            // Reset form fields including newAreaId
             setNewName(''); setNewPhone(''); setNewAmount(''); setNewAssignedId(''); setNewAreaId('');
-            fetchMembers(); // Refresh list
+            fetchMembers();
         } catch (error: any) { setFormError(error.message || 'Failed to add member.'); }
         finally { setIsSubmitting(false); }
     };
 
+    // ** ADDED LOGS to handleDelete **
     const handleDelete = async (memberId: string, memberName: string) => {
-        if (!window.confirm(`Delete Member '${memberName}' (ID: ${memberId})?`)) return;
+        // Log 1: Check if function is called at all
+        console.log(`--- handleDelete CALLED for ID: ${memberId}, Name: ${memberName}`); // <-- ADDED Log 1
+
+        if (!window.confirm(`Delete Member '${memberName}' (ID: ${memberId})?`)) {
+            console.log("--- Delete cancelled by user."); // <-- ADDED Log
+            return;
+        }
+
+        // Log 2: Check before calling the service
+        console.log(`>>> Preparing to call deleteMember service for ID: ${memberId}`); // <-- ADDED Log 2
         try {
-            await deleteMember(memberId);
+            await deleteMember(memberId); // Call the service function from memberService
+
+            // Log 3: Check if the service call completed WITHOUT error
+            console.log(`<<< Service call deleteMember finished for ID: ${memberId} (No error caught by handleDelete)`); // <-- ADDED Log 3
+
             alert('Member deleted successfully.');
-            fetchMembers(); // Refresh list
+            console.log(`>>> Calling fetchMembers to refresh list...`); // <-- ADDED Log
+            await fetchMembers(); // Make sure fetchMembers completes before logging finish
+            console.log(`<<< fetchMembers call finished.`); // <-- ADDED Log
+
         } catch (error: any) {
-            console.error('Delete error:', error);
+            // Log 4: Check if an error WAS caught from deleteMember service
+            console.error('>>> handleDelete CATCH block error:', error); // <-- ADDED Log 4
             alert(`Failed to delete Member: ${error.message}`);
             setFetchError(error.message);
         }
     };
+    // ** END ADDED LOGS **
 
     const handleEditClick = (member: MemberData) => {
         setEditingMember(member);
-        setEditFormData({ // Prefill edit form
+        setEditFormData({
             name: member.name,
             phone: member.phone,
             monthlyAmount: member.monthlyAmount.toString(),
-            areaId: member.areaId, // <-- Set areaId from member data
+            areaId: member.areaId,
             assignedAreaAdminId: member.assignedAreaAdminId ?? ''
         });
         setEditError(null); setEditSuccess(null); setIsEditModalOpen(true);
@@ -136,48 +150,42 @@ const AdminMembers: React.FC = () => {
 
     const handleUpdateSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (!editingMember || !editFormData.areaId) { // Also check if areaId is selected in edit form
+        if (!editingMember || !editFormData.areaId) {
              setEditError('Please select an Area.');
              return;
         }
         setEditError(null); setEditSuccess(null); setIsUpdating(true);
-
-        // Prepare data using areaId
         const updateData: UpdateMemberData = {
             name: editFormData.name,
             phone: editFormData.phone,
             monthlyAmount: editFormData.monthlyAmount !== undefined ? (Number(editFormData.monthlyAmount) || 0) : undefined,
-            areaId: editFormData.areaId, // <-- Send areaId
+            areaId: editFormData.areaId,
             assignedAreaAdminId: editFormData.assignedAreaAdminId === '' ? null : editFormData.assignedAreaAdminId
         };
-        // Clean undefined/NaN before sending (optional, Axios might handle undefined)
         if (updateData.monthlyAmount !== undefined && isNaN(updateData.monthlyAmount)) { setEditError("Amount must be a number."); setIsUpdating(false); return; }
         Object.keys(updateData).forEach(key => updateData[key as keyof UpdateMemberData] === undefined && delete updateData[key as keyof UpdateMemberData]);
-
 
         try {
             await updateMember(editingMember.id, updateData);
             setEditSuccess('Member updated successfully!');
-            fetchMembers(); // Refresh list
-            handleEditModalClose(); // Close modal on success
+            fetchMembers();
+            handleEditModalClose();
         } catch (error: any) { setEditError(error.message || 'Failed to update member.'); }
         finally { setIsUpdating(false); }
     };
 
-    // Filter members based on search query (Keep as is)
     const filteredMembers = useMemo(() => {
-        // ... filtering logic remains the same ...
-         let members = membersList; // Start with the full list state
+         let members = membersList;
          if (searchQuery && searchQuery.trim() !== '') {
              const lowerCaseQuery = searchQuery.toLowerCase();
              members = members.filter(member =>
                  member.name.toLowerCase().includes(lowerCaseQuery) ||
-                 member.phone.includes(searchQuery) || // Maybe search phone too
-                 (member.area?.name ?? '').toLowerCase().includes(lowerCaseQuery) // Search Area Name
+                 member.phone.includes(searchQuery) ||
+                 (member.area?.name ?? '').toLowerCase().includes(lowerCaseQuery)
              );
          }
          return members;
-    }, [membersList, searchQuery]);
+     }, [membersList, searchQuery]);
 
     // --- Component Return (JSX) ---
     return (
@@ -187,37 +195,19 @@ const AdminMembers: React.FC = () => {
             {/* Add New Member Form */}
             <div className={styles.addForm}>
                 <h3>Add New Member</h3>
-                {/* Display area loading/error status */}
-                 {areasLoading && <p>Loading areas...</p>}
-                 {areasError && <p className={styles.errorMessage}>Error loading areas: {areasError}</p>}
-
+                {areasLoading && <p>Loading areas...</p>}
+                {areasError && <p className={styles.errorMessage}>Error loading areas: {areasError}</p>}
                 <form onSubmit={handleAddSubmit}>
                     <div className={styles.formGrid}>
-                        {/* Name, Phone, Amount inputs remain the same */}
                         <div className={styles.formGroup}><label htmlFor="name">Name</label><input type="text" id="name" value={newName} onChange={(e) => setNewName(e.target.value)} required /></div>
                         <div className={styles.formGroup}><label htmlFor="phone">Phone</label><input type="tel" id="phone" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} required /></div>
-
-                        {/* --- ** CHANGED: Address Input to Area Dropdown ** --- */}
                         <div className={styles.formGroup}>
                             <label htmlFor="areaId">Area</label>
-                            <select
-                                id="areaId"
-                                name="areaId"
-                                value={newAreaId}
-                                onChange={(e) => setNewAreaId(e.target.value)}
-                                required
-                                disabled={areasLoading || !!areasError} // Disable if areas haven't loaded
-                            >
+                            <select id="areaId" name="areaId" value={newAreaId} onChange={(e) => setNewAreaId(e.target.value)} required disabled={areasLoading || !!areasError} >
                                 <option value="" disabled>-- Select Area --</option>
-                                {areasList.map(area => (
-                                    <option key={area.id} value={area.id}>
-                                        {area.name}
-                                    </option>
-                                ))}
+                                {areasList.map(area => ( <option key={area.id} value={area.id}> {area.name} </option> ))}
                             </select>
                         </div>
-                        {/* --- End Area Dropdown --- */}
-
                         <div className={styles.formGroup}><label htmlFor="amount">Monthly Amount</label><input type="number" step="any" min="0" id="amount" value={newAmount} onChange={(e) => setNewAmount(e.target.value)} required /></div>
                         <div className={styles.formGroup}><label htmlFor="assignId">Assign Area Admin ID (Optional)</label><input type="text" id="assignId" value={newAssignedId} onChange={(e) => setNewAssignedId(e.target.value)} placeholder="Enter ID or leave blank" /></div>
                     </div>
@@ -229,18 +219,15 @@ const AdminMembers: React.FC = () => {
                 </form>
             </div>
 
-            {/* Search Bar (Keep as is) */}
+            {/* Search Bar */}
              <div className={styles.searchContainer}>
                  <FaSearch className={styles.searchIcon} />
-                 <input
-                     type="search"
-                     placeholder="Search members by name, phone, area..." // Updated placeholder
+                 <input type="search" placeholder="Search members by name, phone, area..."
                      value={searchQuery}
                      onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                      className={styles.searchInput}
                  />
              </div>
-
 
             {/* Display Members List */}
             <div className={styles.listSection}>
@@ -258,7 +245,6 @@ const AdminMembers: React.FC = () => {
                             <thead>
                                 <tr>
                                     <th>ID</th><th>Name</th><th>Phone</th>
-                                    {/* --- ** CHANGED: Header from Address to Area ** --- */}
                                     <th>Area</th>
                                     <th>Amount</th><th>Assigned Area Admin</th><th>Created At</th><th>Actions</th>
                                 </tr>
@@ -267,7 +253,6 @@ const AdminMembers: React.FC = () => {
                                 {filteredMembers.map((member) => (
                                     <tr key={member.id}>
                                         <td>{member.id}</td><td>{member.name}</td><td>{member.phone}</td>
-                                        {/* --- ** CHANGED: Display Area Name ** --- */}
                                         <td>{member.area?.name ?? 'N/A'}</td>
                                         <td>{member.monthlyAmount}</td>
                                         <td>{member.assignedAreaAdmin?.name ?? 'N/A'}</td>
@@ -289,39 +274,22 @@ const AdminMembers: React.FC = () => {
                  <div className={styles.modalBackdrop}>
                      <div className={styles.modalContent}>
                          <h3>Edit Member (ID: {editingMember.id})</h3>
-                           {/* Add area loading/error check for modal */}
-                           {areasLoading && <p>Loading areas...</p>}
-                           {areasError && <p className={styles.errorMessage}>Error loading areas: {areasError}</p>}
+                         {areasLoading && <p>Loading areas...</p>}
+                         {areasError && <p className={styles.errorMessage}>Error loading areas: {areasError}</p>}
                          <form onSubmit={handleUpdateSubmit}>
                              <div className={styles.formGrid}>
-                                 {/* Name, Phone, Amount inputs remain the same */}
-                                  <div className={styles.formGroup}><label htmlFor="editName">Name</label><input type="text" id="editName" name="name" value={editFormData.name ?? ''} onChange={handleEditFormChange} required /></div>
-                                  <div className={styles.formGroup}><label htmlFor="editPhone">Phone</label><input type="tel" id="editPhone" name="phone" value={editFormData.phone ?? ''} onChange={handleEditFormChange} required /></div>
-
-                                 {/* --- ** CHANGED: Address Input to Area Dropdown ** --- */}
-                                  <div className={styles.formGroup}>
+                                 <div className={styles.formGroup}><label htmlFor="editName">Name</label><input type="text" id="editName" name="name" value={editFormData.name ?? ''} onChange={handleEditFormChange} required /></div>
+                                 <div className={styles.formGroup}><label htmlFor="editPhone">Phone</label><input type="tel" id="editPhone" name="phone" value={editFormData.phone ?? ''} onChange={handleEditFormChange} required /></div>
+                                 <div className={styles.formGroup}>
                                      <label htmlFor="editAreaId">Area</label>
-                                     <select
-                                         id="editAreaId"
-                                         name="areaId" // Should match state property name
-                                         value={editFormData.areaId ?? ''} // Use areaId from state
-                                         onChange={handleEditFormChange}
-                                         required
-                                         disabled={areasLoading || !!areasError}
-                                     >
+                                     <select id="editAreaId" name="areaId" value={editFormData.areaId ?? ''} onChange={handleEditFormChange} required disabled={areasLoading || !!areasError} >
                                          <option value="" disabled>-- Select Area --</option>
-                                         {areasList.map(area => (
-                                             <option key={area.id} value={area.id}>
-                                                 {area.name}
-                                             </option>
-                                         ))}
+                                         {areasList.map(area => ( <option key={area.id} value={area.id}> {area.name} </option> ))}
                                      </select>
                                  </div>
-                                  {/* --- End Area Dropdown --- */}
-
                                  <div className={styles.formGroup}><label htmlFor="editAmount">Monthly Amount</label><input type="number" step="any" min="0" id="editAmount" name="monthlyAmount" value={editFormData.monthlyAmount ?? ''} onChange={handleEditFormChange} required /></div>
                                  <div className={styles.formGroup}><label htmlFor="editAssignId">Assign Area Admin ID (empty to unassign)</label><input type="text" id="editAssignId" name="assignedAreaAdminId" value={editFormData.assignedAreaAdminId ?? ''} onChange={handleEditFormChange} placeholder="Enter Area Admin ID" /></div>
-                               </div>
+                             </div>
                              {editError && <p className={styles.errorMessage}>{editError}</p>}
                              {editSuccess && <p className={styles.successMessage}>{editSuccess}</p>}
                              <div className={styles.modalActions}>

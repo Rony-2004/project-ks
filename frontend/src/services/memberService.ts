@@ -107,4 +107,30 @@ export const updateMember = async (id: string, data: UpdateMemberData): Promise<
 };
 
 // DELETE a Member (No changes needed)
-export const deleteMember = async (id: string): Promise<void> => { /* ... keep as is ... */ };
+// DELETE a Member
+export const deleteMember = async (id: string): Promise<void> => {
+    const SERVICE_NAME = '[MemberService deleteMember]';
+    if (!id) {
+        console.error(`${SERVICE_NAME} Error: ID is required.`);
+        throw new Error('Member ID is required to delete.'); // Prevent API call without ID
+    }
+    try {
+        console.log(`${SERVICE_NAME} Attempting DELETE request to /members/${id}`);
+
+        // Use your configured Axios instance (apiClient) to send the DELETE request
+        // The URL should match your backend route: /api/members/:id
+        const response = await apiClient.delete(`/members/${id}`);
+
+        // Usually, a 204 No Content response doesn't need further handling here,
+        // Axios typically won't throw an error for 2xx statuses.
+        console.log(`${SERVICE_NAME} DELETE request successful, status: ${response.status}`);
+        // No explicit return needed as the Promise resolves to void on success
+
+    } catch (error: any) {
+        console.error(`${SERVICE_NAME} Error caught during DELETE request:`, error.response?.data || error.message);
+
+        // Re-throw the error so the component's catch block can handle it
+        // Try to use the error message from the backend response if available
+        throw new Error(error.response?.data?.message || 'Failed to delete member.');
+    }
+};
