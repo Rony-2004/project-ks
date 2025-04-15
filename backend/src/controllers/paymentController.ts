@@ -64,9 +64,22 @@ export const getPaymentsForAreaAdmin = async (req: Request, res: Response) => {
     try {
         console.log(`${logPrefix} Fetching payments recorded by Area Admin ID: ${loggedInUserId}`);
         const payments = await prisma.payment.findMany({
-            where: { recordedById: loggedInUserId },
-            include: { member: { select: { name: true } } }, // Include member name
-            orderBy: { paymentDate: 'desc' }
+            // Replace the existing 'include' line with this:
+      include: {
+        member: {           // Include the related member
+          select: {         // Select only needed member fields
+            name: true,       // Keep member name
+            areaId: true,     // <<< ADD areaId (needed for frontend filtering)
+            area: {           // <<< INCLUDE nested area object
+              select: {
+                id: true,     // <<< Need area id
+                name: true    // <<< Need area name
+              }
+            }
+          }
+        }
+        // Add other includes for the Payment model itself if needed
+      }
         });
         console.log(`${logPrefix} Found ${payments.length} payments.`);
         res.status(200).json(payments);

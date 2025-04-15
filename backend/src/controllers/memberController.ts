@@ -1,4 +1,4 @@
-// backend/src/controllers/memberController.ts (MODIFIED for Area Relation)
+// backend/src/controllers/memberController.ts (Fixed Area Include)
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { UserRole } from '@prisma/client';
@@ -13,35 +13,49 @@ export const getAllMembers = async (req: Request, res: Response) => {
     if (!loggedInUser?.role) { return res.status(401).json({ message: 'Not authorized' }); }
     try {
         let whereClause = {};
+        // Determine filter based on role
         if (loggedInUser.role === 'areaAdmin') {
             whereClause = { assignedAreaAdminId: loggedInUser.id };
         } else if (loggedInUser.role !== 'admin') {
+            // If not admin or areaAdmin, deny access (or handle other roles if they exist)
             return res.status(403).json({ message: 'Forbidden: Unknown role.' });
         }
+        // Note: If role is 'admin', whereClause remains empty {}, fetching all members.
 
+        // Fetch members based on the determined whereClause
         const members = await prisma.member.findMany({
             where: whereClause,
-            include: { // Include BOTH related models' names
-                assignedAreaAdmin: { select: { name: true } },
-                area: { select: { name: true } } // <-- INCLUDE Area name
+            include: { // Include related data
+                assignedAreaAdmin: { select: { name: true } }, // Include assigned admin's name
+                // *** MODIFIED HERE: Ensure both id and name are selected for area ***
+                area: {
+                    select: {
+                        id: true,   // <-- Ensure ID is selected
+                        name: true  // <-- Keep Name selected
+                    }
+                }
+                // *** END MODIFICATION ***
             },
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'desc' } // Order by creation date
         });
+
         console.log(`${logPrefix} Found ${members.length} members.`);
-        res.status(200).json(members);
-    } catch (error: any) { console.error(`${logPrefix} Prisma Error:`, error); res.status(500).json({ message: 'Error fetching members' }); }
+        res.status(200).json(members); // Send the list of members
+
+    } catch (error: any) {
+        console.error(`${logPrefix} Prisma Error:`, error);
+        res.status(500).json({ message: 'Error fetching members' });
+    }
 };
 
 // --- Controller to CREATE a new Member ---
 export const createMember = async (req: Request, res: Response) => {
     const logPrefix = `[${new Date().toISOString()}] createMember:`;
     console.log(`${logPrefix} --- Received POST /api/members ---`);
-    // ** CHANGED: Expect areaId instead of address **
     const { name, phone, monthlyAmount, areaId, assignedAreaAdminId = null } = req.body;
     console.log(`${logPrefix} Request Body:`, req.body);
 
     // Validation
-    // ** CHANGED: Validate areaId instead of address **
     if (!name || !phone || !areaId || monthlyAmount === undefined || monthlyAmount === null) {
          console.log(`${logPrefix} FAIL Validation: Missing fields (name, phone, areaId, monthlyAmount).`);
          return res.status(400).json({ message: 'Missing required fields (name, phone, areaId, monthlyAmount)' });
@@ -51,7 +65,7 @@ export const createMember = async (req: Request, res: Response) => {
     console.log(`${logPrefix} Input validation passed.`);
 
     try {
-        // ** NEW: Validate Area ID exists **
+        // Validate Area ID exists
         console.log(`${logPrefix} Validating areaId: ${areaId}...`);
         const areaExists = await prisma.area.findUnique({ where: { id: areaId } });
         if (!areaExists) {
@@ -60,17 +74,16 @@ export const createMember = async (req: Request, res: Response) => {
         }
         console.log(`${logPrefix} areaId validation passed.`);
 
-        // Validate assignedAreaAdminId if provided (keep as is)
+        // Validate assignedAreaAdminId if provided (assuming validation exists)
         if (assignedAreaAdminId) { /* ... keep validation ... */ }
 
         // Create member in DB
-        // ** CHANGED: Use areaId, remove address **
         const dataToCreate = { name, phone, monthlyAmount: amount, areaId: areaId, assignedAreaAdminId: assignedAreaAdminId || null };
         console.log(`${logPrefix} Attempting prisma.member.create...`);
         const newMember = await prisma.member.create({
              data: dataToCreate,
              // Optionally include related area name in response
-             include: { area: { select: { name: true } } }
+             include: { area: { select: { name: true } } } // Only name needed on create response usually
         });
         console.log(`${logPrefix} Prisma create successful. New Member ID: ${newMember.id}`);
 
@@ -87,7 +100,6 @@ export const createMember = async (req: Request, res: Response) => {
 // --- Controller to UPDATE a Member ---
 export const updateMember = async (req: Request, res: Response) => {
     const { id } = req.params;
-    // ** CHANGED: Expect areaId instead of address **
     const { name, phone, monthlyAmount, areaId, assignedAreaAdminId } = req.body;
     const logPrefix = `[${new Date().toISOString()}] updateMember (ID: ${id}):`;
     console.log(`${logPrefix} Request Body:`, req.body);
@@ -101,11 +113,20 @@ export const updateMember = async (req: Request, res: Response) => {
 
          if (name !== undefined) updateData.name = name;
          if (phone !== undefined) updateData.phone = phone;
-         // REMOVED address
-         if (monthlyAmount !== undefined) { /* ... amount validation ... */ updateData.monthlyAmount = Number(monthlyAmount); }
-         if (assignedAreaAdminId !== undefined) { /* ... assignee validation ... */ updateData.assignedAreaAdminId = assignedAreaAdminId === '' ? null : assignedAreaAdminId; }
+         if (monthlyAmount !== undefined) {
+            const amount = Number(monthlyAmount);
+            if (isNaN(amount) || amount < 0) {
+                 console.log(`${logPrefix} FAIL Validation: Invalid amount.`);
+                 return res.status(400).json({ message: 'Invalid monthly amount' });
+            }
+            updateData.monthlyAmount = amount;
+         }
+         if (assignedAreaAdminId !== undefined) {
+            // Add validation for assignee ID if needed
+            updateData.assignedAreaAdminId = assignedAreaAdminId === '' ? null : assignedAreaAdminId;
+         }
 
-        // ** NEW: Validate and add areaId if present **
+        // Validate and add areaId if present
          if (areaId !== undefined) {
              if (typeof areaId !== 'string' || areaId.trim() === '') {
                  return res.status(400).json({ message: 'Area ID must be a non-empty string.' });
@@ -138,15 +159,16 @@ export const updateMember = async (req: Request, res: Response) => {
 
     } catch (error: any) {
          // @ts-ignore
-         if (error.code === 'P2025') { return res.status(404).json({ message: 'Member not found' }); }
+         if (error.code === 'P2025') { // Record to update not found
+            console.log(`${logPrefix} Prisma Error P2025: Member to update not found.`);
+            return res.status(404).json({ message: 'Member not found' });
+         }
         console.error(`${logPrefix} !!! Prisma/DB Error updating member:`, error);
         res.status(500).json({ message: 'Error updating member' });
     }
      console.log(`${logPrefix} --- Finished PUT /api/members/${id} ---`);
 };
 
-// --- Controller to DELETE a Member ---
-// (No changes needed here based on schema update)
 // --- Controller to DELETE a Member ---
 export const deleteMember = async (req: Request, res: Response) => {
     const { id } = req.params; // Get the ID from the URL parameter
@@ -170,13 +192,11 @@ export const deleteMember = async (req: Request, res: Response) => {
         console.log(`${logPrefix} Sending SUCCESS response (204 No Content).`);
 
         // Send HTTP 204 No Content status for successful DELETE requests
-        // It indicates success but that there's no response body to send.
         res.status(204).send();
 
     } catch (error: any) {
         // Prisma throws an error if the record to delete doesn't exist (P2025)
-        // Check for this specific error code for a better 404 response
-        // @ts-ignore - Prisma errors often have a 'code' property, ignore TS warning here if needed
+        // @ts-ignore
         if (error.code === 'P2025') {
             console.log(`${logPrefix} Prisma Error P2025: Record to delete not found.`);
             return res.status(404).json({ message: 'Member not found' }); // Specific error for not found
