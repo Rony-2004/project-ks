@@ -1,277 +1,413 @@
 /* frontend/src/pages/admin/AdminAreaAdmins.module.css */
 .container {
-    padding: 1.5rem; /* Adjust overall padding */
-    animation: fadeIn 0.5s ease-out; /* Simple fade-in */
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  .container h2 {
-    margin-bottom: 1.5rem;
-    color: #111827;
-    font-size: 1.8rem; /* Larger heading */
-    font-weight: 700;
-  }
-  
-  .container h3 {
-    margin-bottom: 1rem;
-    color: #374151;
-    border-bottom: 1px solid #e5e7eb;
-    padding-bottom: 0.5rem;
-    font-size: 1.25rem; /* Larger subheading */
-    font-weight: 600;
-  }
-  
-  /* --- Form Styling --- */
-  .addForm {
-    background-color: white;
-    padding: 2rem; /* More padding */
-    border-radius: 10px; /* Smoother corners */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    margin-bottom: 2.5rem;
-  }
-  
-  .formGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Adjust min width */
-    gap: 1.25rem; /* Increased gap */
-    margin-bottom: 1.5rem; /* Space before button */
-  }
-  
-  .formGroup label {
-    display: block;
-    margin-bottom: 0.5rem; /* Space between label and input */
-    font-weight: 500;
-    font-size: 0.9rem;
-    color: #374151;
-  }
-  
-  /* --- Input Styling --- */
-  .formGroup input {
-    width: 100%;
-    padding: 0.75rem 1rem; /* Increased padding */
-    border: 1px solid #d1d5db; /* Standard border */
+  padding: 1.5rem; /* Adjust overall padding */
+  animation: fadeIn 0.5s ease-out; /* Simple fade-in */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.container h2 {
+  margin-bottom: 1.5rem;
+  color: #111827;
+  font-size: 1.8rem; /* Larger heading */
+  font-weight: 700;
+}
+
+.container h3 {
+  margin-bottom: 1rem;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+  font-size: 1.25rem; /* Larger subheading */
+  font-weight: 600;
+}
+
+/* --- Form Styling --- */
+.addForm {
+  background-color: white;
+  padding: 2rem; /* More padding */
+  border-radius: 10px; /* Smoother corners */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  margin-bottom: 2.5rem;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Adjust min width */
+  gap: 1.25rem; /* Increased gap */
+  margin-bottom: 1.5rem; /* Space before button */
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 0.5rem; /* Space between label and input */
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+/* --- Input Styling --- */
+.formGroup input {
+  width: 100%;
+  padding: 0.75rem 1rem; /* Increased padding */
+  border: 1px solid #d1d5db; /* Standard border */
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box; /* Include padding in width */
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background-color: #f9fafb; /* Light background instead of black */
+  color: #1f2937; /* Dark text */
+}
+.formGroup input:focus {
+  outline: none;
+  border-color: #4f46e5; /* Indigo focus border */
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); /* Focus ring */
+}
+
+/* --- Button Styling (General) --- */
+.submitButton, .cancelButton, .actionButton {
+    padding: 0.7rem 1.2rem;
+    border: none;
     border-radius: 6px;
-    font-size: 1rem;
-    box-sizing: border-box; /* Include padding in width */
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    background-color: #f9fafb; /* Light background instead of black */
-    color: #1f2937; /* Dark text */
-  }
-  .formGroup input:focus {
-    outline: none;
-    border-color: #4f46e5; /* Indigo focus border */
-    background-color: white;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); /* Focus ring */
-  }
-  
-  /* --- Button Styling (General) --- */
-  .submitButton, .cancelButton, .actionButton {
-      padding: 0.7rem 1.2rem;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease-in-out;
-      display: inline-flex; /* Align icons and text */
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem; /* Space between icon and text if needed */
-  }
-  .submitButton:disabled, .actionButton:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-  }
-  
-  /* Add Area Admin & Save Changes Button */
-  .submitButton {
-    background-color: #4f46e5; /* Indigo */
-    color: white;
-    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
-  }
-  .submitButton:hover:not(:disabled) {
-    background-color: #4338ca; /* Darker Indigo */
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3);
-  }
-  
-  /* Cancel Button */
-  .cancelButton {
-      background-color: #e5e7eb; /* Light gray */
-      color: #374151;
-      border: 1px solid #d1d5db;
-  }
-  .cancelButton:hover {
-      background-color: #d1d5db; /* Darker Gray */
-      border-color: #9ca3af;
-  }
-  
-  /* Action Buttons (Edit/Delete) */
-  .actionButton {
-      padding: 0.5rem 0.6rem; /* Adjust padding for icons */
-      margin-right: 0.5rem;
-      font-size: 1rem; /* Icon size */
-      line-height: 1; /* Prevent extra height */
-  }
-  .actionButton:hover {
-      transform: scale(1.1); /* Scale effect on hover */
-  }
-  .editButton {
-    background-color: #f59e0b; /* Amber */
-    color: white;
-  }
-  .deleteButton {
-    background-color: #ef4444; /* Red */
-    color: white;
-  }
-  
-  /* --- List Section & Table Styling --- */
-  .listSection {
-    margin-top: 2.5rem;
-  }
-  .tableContainer {
-    overflow-x: auto; /* Allow horizontal scroll on small screens if table is wide */
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  }
-  .table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 600px; /* Prevent excessive squashing */
-  }
-  .table th, .table td {
-    border-bottom: 1px solid #e5e7eb; /* Bottom borders only */
-    padding: 1rem 1.2rem; /* Increased padding */
-    text-align: left;
-    font-size: 0.9rem;
-    vertical-align: middle; /* Align button icons nicely */
-  }
-  .table th {
-    background-color: #f9fafb;
+    font-size: 0.95rem;
     font-weight: 600;
-    color: #374151;
-    font-size: 0.85rem; /* Smaller header text */
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  .table tbody tr:hover {
-     background-color: #f0fdf4; /* Subtle green hover */
-  }
-  .table td:last-child { /* Actions column */
-      white-space: nowrap; /* Prevent buttons from wrapping */
-  }
-  
-  /* Loading / No Data Text */
-  .loadingText, .noDataText {
-      padding: 2rem;
-      text-align: center;
-      color: #6b7280;
-      font-style: italic;
-  }
-  
-  /* --- Message Styling --- */
-  .errorMessage, .successMessage {
-    padding: 0.9rem 1rem; /* Adjust padding */
-    border-radius: 6px;
-    margin: 1rem 0; /* Consistent margin */
-    font-size: 0.9rem;
-    font-weight: 500;
-    display: flex;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    display: inline-flex; /* Align icons and text */
     align-items: center;
-    gap: 0.5rem;
-  }
-  .errorMessage {
-    color: #991b1b; /* Darker Red Text */
-    background-color: #fee2e2; /* Light Red BG */
-    border: 1px solid #fca5a5; /* Red Border */
-  }
-  .successMessage {
-     color: #14532d; /* Darker Green Text */
-     background-color: #dcfce7; /* Light Green BG */
-     border: 1px solid #86efac; /* Green Border */
-  }
-  /* In the relevant CSS Module file */
+    justify-content: center;
+    gap: 0.4rem; /* Space between icon and text if needed */
+}
+.submitButton:disabled, .actionButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Add Area Admin & Save Changes Button */
+.submitButton {
+  background-color: #4f46e5; /* Indigo */
+  color: white;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+}
+.submitButton:hover:not(:disabled) {
+  background-color: #4338ca; /* Darker Indigo */
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3);
+}
+
+/* Cancel Button */
+.cancelButton {
+    background-color: #e5e7eb; /* Light gray */
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+.cancelButton:hover {
+    background-color: #d1d5db; /* Darker Gray */
+    border-color: #9ca3af;
+}
+
+/* Action Buttons (Edit/Delete) */
+.actionButton {
+    padding: 0.5rem 0.6rem; /* Adjust padding for icons */
+    margin-right: 0.5rem;
+    font-size: 1rem; /* Icon size */
+    line-height: 1; /* Prevent extra height */
+}
+.actionButton:hover {
+    transform: scale(1.1); /* Scale effect on hover */
+}
+.editButton {
+  background-color: #f59e0b; /* Amber */
+  color: white;
+}
+.deleteButton {
+  background-color: #ef4444; /* Red */
+  color: white;
+}
+
+/* --- List Section & Table Styling --- */
+.listSection {
+  margin-top: 2.5rem;
+}
+.tableContainer {
+  overflow-x: auto; /* Allow horizontal scroll on small screens if table is wide */
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px; /* Prevent excessive squashing */
+}
+.table th, .table td {
+  border-bottom: 1px solid #e5e7eb; /* Bottom borders only */
+  padding: 1rem 1.2rem; /* Increased padding */
+  text-align: left;
+  font-size: 0.9rem;
+  vertical-align: middle; /* Align button icons nicely */
+}
+.table th {
+  background-color: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.85rem; /* Smaller header text */
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.table tbody tr:hover {
+   background-color: #f0fdf4; /* Subtle green hover */
+}
+.table td:last-child { /* Actions column */
+    white-space: nowrap; /* Prevent buttons from wrapping */
+}
+
+/* Loading / No Data Text */
+.loadingText, .noDataText {
+    padding: 2rem;
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+}
+
+/* --- Message Styling --- */
+.errorMessage, .successMessage {
+  padding: 0.9rem 1rem; /* Adjust padding */
+  border-radius: 6px;
+  margin: 1rem 0; /* Consistent margin */
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.errorMessage {
+  color: #991b1b; /* Darker Red Text */
+  background-color: #fee2e2; /* Light Red BG */
+  border: 1px solid #fca5a5; /* Red Border */
+}
+.successMessage {
+   color: #14532d; /* Darker Green Text */
+   background-color: #dcfce7; /* Light Green BG */
+   border: 1px solid #86efac; /* Green Border */
+}
+/* In the relevant CSS Module file */
 
 /* --- Search Bar Styles --- */
 .searchContainer {
-  margin-bottom: 1.5rem;
-  max-width: 400px;
-  position: relative;
+margin-bottom: 1.5rem;
+max-width: 400px;
+position: relative;
 }
 
 .searchInput {
-  width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem; /* Left padding for icon */
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 1rem;
-  box-sizing: border-box;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  background-color: white;
+width: 100%;
+padding: 0.75rem 1rem 0.75rem 2.5rem; /* Left padding for icon */
+border: 1px solid #d1d5db;
+border-radius: 8px;
+font-size: 1rem;
+box-sizing: border-box;
+transition: border-color 0.2s ease, box-shadow 0.2s ease;
+background-color: white;
 }
 .searchInput:focus {
-  outline: none;
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+outline: none;
+border-color: #4f46e5;
+box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
 }
 
 .searchIcon {
-  position: absolute;
-  left: 0.8rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #9ca3af;
-  font-size: 1rem;
+position: absolute;
+left: 0.8rem;
+top: 50%;
+transform: translateY(-50%);
+color: #9ca3af;
+font-size: 1rem;
 }
 /* --- Search Bar Styles (Should be IN your .module.css file) --- */
 .searchContainer {
-  margin-bottom: 1.5rem;
-  max-width: 400px;
-  position: relative;
+margin-bottom: 1.5rem;
+max-width: 400px;
+position: relative;
 }
 .searchInput {
-  width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem; /* Left padding for icon */
-  border: 1px solid #000000;
-  border-radius: 8px;
-  font-size: 1rem;
-  box-sizing: border-box;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  background-color: rgb(0, 0, 0);
+width: 100%;
+padding: 0.75rem 1rem 0.75rem 2.5rem; /* Left padding for icon */
+border: 1px solid #000000;
+border-radius: 8px;
+font-size: 1rem;
+box-sizing: border-box;
+transition: border-color 0.2s ease, box-shadow 0.2s ease;
+background-color: rgb(0, 0, 0);
 }
 .searchInput:focus {
-  outline: none;
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+outline: none;
+border-color: #4f46e5;
+box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
 }
 .searchInput::placeholder { color: #f1f1f1; font-style: italic; }
 .searchIcon {
-  position: absolute; left: 0.8rem; top: 50%;
-  transform: translateY(-50%); color: #9ca3af; font-size: 1rem;
-  pointer-events: none;
+position: absolute; left: 0.8rem; top: 50%;
+transform: translateY(-50%); color: #9ca3af; font-size: 1rem;
+pointer-events: none;
 }
-  
-  /* --- Modal Styling (Refined) --- */
-  .modalBackdrop {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background-color: rgba(0, 0, 0, 0.6); /* Darker backdrop */
-      display: flex; justify-content: center; align-items: center;
-      z-index: 1050;
-      animation: fadeIn 0.3s ease-out; /* Fade in backdrop */
-  }
-  .modalContent {
-      background-color: white; padding: 2.5rem; border-radius: 10px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-      width: 90%; max-width: 650px; max-height: 90vh;
-      overflow-y: auto;
-      animation: slideIn 0.3s ease-out; /* Slide in modal */
-  }
-  @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-  
-  .modalContent h3 { margin-top: 0; margin-bottom: 1.8rem; color: #111827; font-size: 1.5rem;}
-  .modalActions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; }
+
+/* --- Modal Styling (Refined) --- */
+.modalBackdrop {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Darker backdrop */
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1050;
+    animation: fadeIn 0.3s ease-out; /* Fade in backdrop */
+}
+.modalContent {
+    background-color: white; padding: 2.5rem; border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    width: 90%; max-width: 650px; max-height: 90vh;
+    overflow-y: auto;
+    animation: slideIn 0.3s ease-out; /* Slide in modal */
+}
+@keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.modalContent h3 { margin-top: 0; margin-bottom: 1.8rem; color: #111827; font-size: 1.5rem;}
+.modalActions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; }
+/* In AdminAreaAdmins.module.css (or a shared CSS file) */
+
+/* --- Layout for Controls Bar (Search + Filter) --- */
+.controlsContainer {
+display: flex;         /* Arrange children (search & filter) horizontally */
+align-items: stretch;  /* Make children same height */
+gap: 1rem;             /* Space between search and filter */
+margin-top: 1rem;      /* Add some space above the controls */
+margin-bottom: 1.5rem; /* Space below the control bar */
+}
+
+/* Container for Search Input */
+.searchContainer {
+flex: 1;             /* ** KEY: Distribute space equally with filterContainer ** */
+display: flex;         /* Internal alignment for icon */
+align-items: center;
+position: relative;    /* For absolute icon positioning */
+}
+
+/* Container for Filter Select */
+.filterContainer {
+flex: 1;             /* ** KEY: Distribute space equally with searchContainer ** */
+display: flex;         /* Internal alignment for label/select */
+align-items: center;
+gap: 0.6rem;           /* Space between label and select */
+}
+
+
+/* --- Search Input Styling --- */
+.searchInput {
+/* Core Layout & Sizing */
+width: 100%;         /* ** KEY: Fill the container ** */
+height: 40px;        /* Consistent height */
+box-sizing: border-box; /* Include padding/border in size */
+/* Appearance */
+background-color: #f0f2f5; /* Light grey background */
+color: #000000;     /* Black text color */
+border: 1px solid #d9d9d9; /* Softer border */
+border-radius: 6px;  /* Rounded corners */
+padding: 0.6rem 0.8rem 0.6rem 2.7rem; /* Left padding for icon */
+font-size: 0.95rem;
+/* Animation */
+transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.searchInput::placeholder {
+color: #555;        /* Darker placeholder text */
+opacity: 0.8;
+}
+
+.searchInput:hover {
+border-color: #a0a0a0; /* Darken border on hover */
+}
+
+.searchInput:focus {
+outline: none;
+border-color: #1890ff; /* Focus color */
+box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.2); /* Glow effect */
+background-color: #ffffff; /* White background on focus */
+}
+
+/* Search Icon */
+.searchIcon {
+position: absolute;
+left: 14px;
+top: 50%;
+transform: translateY(-50%);
+color: #333;         /* Darker icon */
+font-size: 1rem;
+z-index: 2;          /* Ensure icon is above input background */
+}
+
+
+/* --- Filter Select Styling --- */
+.filterLabel {
+flex-shrink: 0;      /* Prevent label from shrinking */
+white-space: nowrap; /* Prevent wrapping */
+font-weight: 500;
+color: #000000;     /* Black text color */
+}
+
+.filterSelect {
+/* Core Layout & Sizing */
+width: 100%;         /* ** KEY: Fill the container ** */
+height: 40px;        /* Match input height */
+box-sizing: border-box;
+/* Appearance */
+background-color: #f0f2f5; /* Match input background */
+color: #000000;     /* Black text color */
+border: 1px solid #d9d9d9;
+border-radius: 6px;
+padding: 0.6rem 0.8rem;
+font-size: 0.95rem;
+cursor: pointer;
+/* Custom Arrow */
+appearance: none;    /* Remove default system arrow */
+background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%20fill%3D%22%23333333%22%3E%3Cpath%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+background-repeat: no-repeat;
+background-position: right 0.9rem center;
+background-size: 0.7em auto;
+padding-right: 2.8rem; /* Make space for the arrow */
+/* Animation */
+transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.filterSelect:hover {
+border-color: #a0a0a0;
+}
+
+.filterSelect:focus {
+outline: none;
+border-color: #1890ff;
+box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.2);
+background-color: #ffffff;
+}
+
+.filterSelect:disabled {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+  opacity: 0.6;
+  border-color: #e0e0e0;
+}
+
+
+/* --- Optional: Media Query for stacking on smaller screens --- */
+@media (max-width: 992px) { /* Adjust breakpoint if needed */
+.controlsContainer {
+  flex-direction: column; /* Stack controls vertically */
+  align-items: stretch;   /* Make them full width */
+  gap: 1rem;
+}
+}
+
+/* Remember to include other necessary styles for your page */
+/* e.g., .container, .addForm, .listSection, .tableContainer, .table, etc. */
+

@@ -1,4 +1,4 @@
-// frontend/src/pages/admin/AdminMembers.tsx (FULL CODE with ONLY handleDelete Logs Added)
+// frontend/src/pages/admin/AdminMembers.tsx (FULL CODE with Area Filter Added)
 import React, { useState, useEffect, FormEvent, useMemo, ChangeEvent } from 'react';
 import {
     getMembers, addMember, deleteMember, updateMember,
@@ -15,18 +15,19 @@ const AdminMembers: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>('');
-    // --- ** NEW **: State for Areas list ---
+    // --- State for Areas list ---
     const [areasList, setAreasList] = useState<Area[]>([]);
     const [areasLoading, setAreasLoading] = useState<boolean>(true);
     const [areasError, setAreasError] = useState<string | null>(null);
+    // --- ** NEW ** State for the Area Filter Dropdown ---
+    const [selectedAreaFilter, setSelectedAreaFilter] = useState<string>(''); // '' means 'All Areas'
 
     // Add Form state
     const [newName, setNewName] = useState('');
     const [newPhone, setNewPhone] = useState('');
-    // const [newAddress, setNewAddress] = useState(''); // REMOVED
     const [newAmount, setNewAmount] = useState('');
     const [newAssignedId, setNewAssignedId] = useState(''); // Area Admin ID
-    const [newAreaId, setNewAreaId] = useState(''); // <-- ADDED: State for selected Area ID
+    const [newAreaId, setNewAreaId] = useState('');
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [formError, setFormError] = useState<string | null>(null);
     const [formSuccess, setFormSuccess] = useState<string | null>(null);
@@ -34,9 +35,9 @@ const AdminMembers: React.FC = () => {
     // Edit Modal State
     const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
     const [editingMember, setEditingMember] = useState<MemberData | null>(null);
-    const [editFormData, setEditFormData] = useState<UpdateMemberData>({ // Interfaces updated in service file
+    const [editFormData, setEditFormData] = useState<UpdateMemberData>({
         name: '', phone: '', monthlyAmount: '',
-        areaId: '', // <-- CHANGED: Use areaId
+        areaId: '',
         assignedAreaAdminId: null
     });
     const [editError, setEditError] = useState<string | null>(null);
@@ -53,11 +54,11 @@ const AdminMembers: React.FC = () => {
         finally { setIsLoading(false); }
     };
 
-    // --- ** NEW **: Fetch Areas ---
+    // --- Fetch Areas ---
     const fetchAreas = async () => {
         setAreasLoading(true); setAreasError(null);
         try {
-            const data = await getAllAreas(); // Use the new service function
+            const data = await getAllAreas();
             setAreasList(data ?? []);
         } catch (error: any) {
             console.error("Failed to fetch areas:", error);
@@ -92,42 +93,31 @@ const AdminMembers: React.FC = () => {
             await addMember(newMemberData);
             setFormSuccess('Member added successfully!');
             setNewName(''); setNewPhone(''); setNewAmount(''); setNewAssignedId(''); setNewAreaId('');
-            fetchMembers();
+            fetchMembers(); // Refresh list
         } catch (error: any) { setFormError(error.message || 'Failed to add member.'); }
         finally { setIsSubmitting(false); }
     };
 
-    // ** ADDED LOGS to handleDelete **
     const handleDelete = async (memberId: string, memberName: string) => {
-        // Log 1: Check if function is called at all
-        console.log(`--- handleDelete CALLED for ID: ${memberId}, Name: ${memberName}`); // <-- ADDED Log 1
-
+        console.log(`--- handleDelete CALLED for ID: ${memberId}, Name: ${memberName}`);
         if (!window.confirm(`Delete Member '${memberName}' (ID: ${memberId})?`)) {
-            console.log("--- Delete cancelled by user."); // <-- ADDED Log
+            console.log("--- Delete cancelled by user.");
             return;
         }
-
-        // Log 2: Check before calling the service
-        console.log(`>>> Preparing to call deleteMember service for ID: ${memberId}`); // <-- ADDED Log 2
+        console.log(`>>> Preparing to call deleteMember service for ID: ${memberId}`);
         try {
-            await deleteMember(memberId); // Call the service function from memberService
-
-            // Log 3: Check if the service call completed WITHOUT error
-            console.log(`<<< Service call deleteMember finished for ID: ${memberId} (No error caught by handleDelete)`); // <-- ADDED Log 3
-
+            await deleteMember(memberId);
+            console.log(`<<< Service call deleteMember finished for ID: ${memberId} (No error caught by handleDelete)`);
             alert('Member deleted successfully.');
-            console.log(`>>> Calling fetchMembers to refresh list...`); // <-- ADDED Log
-            await fetchMembers(); // Make sure fetchMembers completes before logging finish
-            console.log(`<<< fetchMembers call finished.`); // <-- ADDED Log
-
+            console.log(`>>> Calling fetchMembers to refresh list...`);
+            await fetchMembers();
+            console.log(`<<< fetchMembers call finished.`);
         } catch (error: any) {
-            // Log 4: Check if an error WAS caught from deleteMember service
-            console.error('>>> handleDelete CATCH block error:', error); // <-- ADDED Log 4
+            console.error('>>> handleDelete CATCH block error:', error);
             alert(`Failed to delete Member: ${error.message}`);
             setFetchError(error.message);
         }
     };
-    // ** END ADDED LOGS **
 
     const handleEditClick = (member: MemberData) => {
         setEditingMember(member);
@@ -168,24 +158,34 @@ const AdminMembers: React.FC = () => {
         try {
             await updateMember(editingMember.id, updateData);
             setEditSuccess('Member updated successfully!');
-            fetchMembers();
+            fetchMembers(); // Refresh list
             handleEditModalClose();
         } catch (error: any) { setEditError(error.message || 'Failed to update member.'); }
         finally { setIsUpdating(false); }
     };
 
+    // --- ** UPDATED ** Memoized Filtering Logic (Search + Area Filter) ---
     const filteredMembers = useMemo(() => {
-         let members = membersList;
-         if (searchQuery && searchQuery.trim() !== '') {
-             const lowerCaseQuery = searchQuery.toLowerCase();
-             members = members.filter(member =>
-                 member.name.toLowerCase().includes(lowerCaseQuery) ||
-                 member.phone.includes(searchQuery) ||
-                 (member.area?.name ?? '').toLowerCase().includes(lowerCaseQuery)
-             );
-         }
-         return members;
-     }, [membersList, searchQuery]);
+        let members = membersList; // Start with the full list
+
+        // 1. Filter by Search Query
+        if (searchQuery && searchQuery.trim() !== '') {
+            const lowerCaseQuery = searchQuery.toLowerCase();
+            members = members.filter(member =>
+                member.name.toLowerCase().includes(lowerCaseQuery) ||
+                member.phone.includes(searchQuery) ||
+                (member.area?.name ?? '').toLowerCase().includes(lowerCaseQuery)
+            );
+        }
+
+        // 2. Filter by Selected Area
+        if (selectedAreaFilter !== '') { // Apply if an area is selected (not 'All Areas')
+            members = members.filter(member => member.areaId === selectedAreaFilter);
+        }
+
+        return members; // Return the final filtered list
+    // Add selectedAreaFilter to the dependency array
+    }, [membersList, searchQuery, selectedAreaFilter]); // <-- Dependency array updated
 
     // --- Component Return (JSX) ---
     return (
@@ -219,6 +219,28 @@ const AdminMembers: React.FC = () => {
                 </form>
             </div>
 
+            {/* --- ** NEW ** Area Filter Dropdown --- */}
+            <div className={styles.filterContainer}>
+                <label htmlFor="areaFilter" className={styles.filterLabel}>Filter by Area:</label>
+                <select
+                    id="areaFilter"
+                    name="areaFilter"
+                    value={selectedAreaFilter}
+                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedAreaFilter(e.target.value)}
+                    className={styles.filterSelect}
+                    disabled={areasLoading || !!areasError}
+                >
+                    <option value="">-- All Areas --</option>
+                    {areasList.map(area => (
+                        <option key={area.id} value={area.id}>
+                            {area.name}
+                        </option>
+                    ))}
+                </select>
+                {areasLoading && <span className={styles.loadingTextSmall}> Loading areas...</span>}
+                {areasError && <span className={styles.errorMessageSmall}> Error loading areas</span>}
+            </div>
+
             {/* Search Bar */}
              <div className={styles.searchContainer}>
                  <FaSearch className={styles.searchIcon} />
@@ -231,12 +253,19 @@ const AdminMembers: React.FC = () => {
 
             {/* Display Members List */}
             <div className={styles.listSection}>
-                <h3>Current Members</h3>
+                {/* Added filter status text */}
+                <h3>
+                    Current Members
+                    {selectedAreaFilter && areasList.find(a => a.id === selectedAreaFilter)
+                        ? ` (Filtered by Area: ${areasList.find(a => a.id === selectedAreaFilter)?.name})`
+                        : ''}
+                </h3>
                 {isLoading && <p className={styles.loadingText}>Loading members...</p>}
                 {fetchError && <p className={styles.errorMessage}>{fetchError}</p>}
+                {/* Updated message based on search AND filter */}
                 {!isLoading && !fetchError && filteredMembers.length === 0 && (
                     <p className={styles.noDataText}>
-                        {searchQuery ? 'No members found matching your search.' : 'No members found.'}
+                        {searchQuery || selectedAreaFilter ? 'No members found matching your filters.' : 'No members found.'}
                     </p>
                 )}
                 {!isLoading && !fetchError && filteredMembers.length > 0 && (
@@ -250,6 +279,7 @@ const AdminMembers: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
+                                {/* Use the filteredMembers list here */}
                                 {filteredMembers.map((member) => (
                                     <tr key={member.id}>
                                         <td>{member.id}</td><td>{member.name}</td><td>{member.phone}</td>
@@ -298,7 +328,7 @@ const AdminMembers: React.FC = () => {
                              </div>
                          </form>
                      </div>
-                   </div>
+                 </div>
              )}
             {/* End Edit Modal */}
 

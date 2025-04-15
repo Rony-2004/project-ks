@@ -321,13 +321,124 @@
 
 
 /* --- Search Bar Styles --- */
-.searchContainer {
-  max-width: 350px; /* Adjust width */
-  position: relative;
-  flex-grow: 1; /* Allow search to take space */
-   margin-bottom: 0; /* Align with filters */
+/* --- Search Input Styling --- */
+.searchInput {
+  /* --- Appearance --- */
+  background-color: #f0f2f5; /* Light grey background */
+  color: #000000;     /* Black text color */
+  border: 1px solid #d9d9d9; /* Softer border */
+  border-radius: 6px;  /* Slightly more rounded corners */
+  padding: 0.6rem 0.8rem 0.6rem 2.7rem; /* Left padding for icon */
+  font-size: 0.95rem;
+  height: 40px;        /* Control height */
+  box-sizing: border-box;
+  /* --- Animation --- */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+  width: 100%; /* Ensure it fills its container */
 }
-.searchInput { width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; box-sizing: border-box; transition: border-color 0.2s ease, box-shadow 0.2s ease; background-color: white; }
-.searchInput:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
-.searchInput::placeholder { color: #9ca3af; font-style: italic; }
-.searchIcon { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 1rem; pointer-events: none; }
+
+/* Placeholder Text Styling */
+.searchInput::placeholder {
+  color: #555;
+  opacity: 0.8;
+}
+
+/* Hover State */
+.searchInput:hover {
+  border-color: #a0a0a0;
+}
+
+/* Focus State (Animation/Highlight) */
+.searchInput:focus {
+  outline: none;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.2); /* Glow effect */
+  background-color: #ffffff; /* White background on focus */
+}
+
+/* Search Icon Styling */
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #333; /* Darker icon */
+  font-size: 1rem;
+  z-index: 2; /* Above input background */
+}
+
+
+/* --- Filter Dropdown Styling --- */
+.filterLabel {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-weight: 500;
+  color: #000000; /* Black text color */
+}
+
+.filterSelect {
+  /* --- Appearance --- */
+  background-color: #f0f2f5; /* Light grey background - MATCH INPUT */
+  color: #000000;     /* Black text color */
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.95rem;
+  height: 40px;        /* Match input height */
+  box-sizing: border-box;
+  cursor: pointer;
+  /* --- Custom Arrow --- */
+  appearance: none;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%20fill%3D%22%23333333%22%3E%3Cpath%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  background-size: 0.7em auto;
+  padding-right: 2.8rem; /* Space for the arrow */
+  /* --- Animation --- */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+  width: 100%; /* Ensure it fills its container */
+}
+
+/* Hover State */
+.filterSelect:hover {
+  border-color: #a0a0a0;
+}
+
+/* Focus State (Animation/Highlight) */
+.filterSelect:focus {
+  outline: none;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.2);
+  background-color: #ffffff;
+}
+
+/* Disabled State */
+.filterSelect:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+    opacity: 0.6;
+    border-color: #e0e0e0;
+}
+
+/* --- Container Layout Rules (Ensure these are also present for side-by-side equal width) --- */
+/* You might already have these from previous steps */
+
+/*
+.controlsContainer {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.searchContainer,
+.filterContainer {
+  flex: 1; // Distribute space equally
+  display: flex;
+  align-items: center;
+}
+
+.filterContainer {
+  gap: 0.6rem; // Space between label and select
+}
+*/
