@@ -1,0 +1,220 @@
+/* Styles specifically for AreaAdminPaymentHistory */
+
+/* --- Base Container & Keyframes --- */
+.container {
+    padding: 1.5rem;
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* --- Headings --- */
+  .container h2 {
+    margin-bottom: 0.5rem; /* Reduced margin */
+    color: #111827;
+    font-size: 1.8rem;
+    font-weight: 700;
+  }
+  .container h3 {
+    margin-top: 2rem; /* Add space above table heading */
+    margin-bottom: 1rem;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  .container > p { /* Style for the introductory paragraph */
+      margin-bottom: 1.5rem;
+      color: #4b5563;
+      font-size: 0.95rem;
+  }
+  
+  
+  /* --- Filter/Search Controls Layout --- */
+  .controlsContainer {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+    gap: 1.5rem; /* Space between filter group and search */
+    align-items: flex-end; /* Align bottom edges */
+    margin-bottom: 2rem; /* Space below controls */
+  }
+  
+  /* Container for the group of filters (Month, Year, Area) */
+  .filterContainer {
+    flex: 3; /* Give filter group more space */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem; /* Space between individual filters */
+    align-items: flex-end; /* Align filters to the bottom */
+    min-width: 300px; /* Prevent excessive squishing */
+    /* Optional: Add background/border if desired */
+    /* background-color: #f9fafb; */
+    /* padding: 1rem; */
+    /* border-radius: 8px; */
+    /* border: 1px solid #e5e7eb; */
+  }
+  
+  /* Container for the search input */
+  .searchContainer {
+    flex: 2; /* Give search slightly less space */
+    min-width: 250px; /* Minimum width for search */
+    position: relative; /* For icon positioning */
+    align-self: flex-end; /* Ensure it aligns with bottom of filters */
+  }
+  
+  /* Styling for each filter group (label + input/select) within filterContainer */
+  .formGroup {
+    margin-bottom: 0; /* Remove bottom margin as gap is handled by parent */
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 160px; /* Allow filters to grow/shrink/wrap */
+  }
+  
+  .formGroup label,
+  .filterLabel { /* Consistent label style */
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: 500;
+    font-size: 0.85rem; /* Slightly smaller label */
+    color: #374151;
+  }
+  
+  /* --- Input/Select Styling for Filters & Search --- */
+  .searchInput,
+  .filterContainer select, /* Target selects inside filter container */
+  .yearInput { /* Target year input specifically */
+    width: 100%;
+    height: 40px;
+    box-sizing: border-box;
+    background-color: #f0f2f5;
+    color: #000000;
+    border: 1px solid #d1d5db; /* Consistent border */
+    border-radius: 6px;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.95rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+  }
+  
+  .searchInput { padding-left: 2.8rem; /* Space for icon */ }
+  .filterContainer select { /* Specific styles for selects in filter bar */
+    cursor: pointer;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%20fill%3D%22%23333333%22%3E%3Cpath%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: right 0.9rem center;
+    background-size: 0.7em auto;
+    padding-right: 2.8rem; /* Space for the arrow */
+  }
+
+  
+  .searchInput::placeholder { color: #555; opacity: 0.8; }
+  .searchInput:hover,
+  .filterContainer select:hover,
+  .yearInput:hover { border-color: #a0a0a0; }
+  .searchInput:focus,
+  .filterContainer select:focus,
+  .yearInput:focus {
+    outline: none; border-color: #1890ff;
+    box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.2);
+    background-color: #ffffff;
+  }
+  .filterContainer select:disabled {
+      background-color: #e9ecef; cursor: not-allowed;
+      opacity: 0.6; border-color: #e0e0e0;
+  }
+  
+  .searchIcon {
+    position: absolute; left: 0.9rem; top: 50%;
+    transform: translateY(-50%); color: #333;
+    font-size: 1rem; z-index: 2; pointer-events: none;
+  }
+  
+  /* Year Filter Specific Styles */
+  .yearFilterGroup { display: flex; align-items: center; }
+  .yearInput {
+      flex-grow: 1;
+      border-radius: 6px 0 0 6px; /* Rounded left */
+      border-right: none;
+  }
+  .yearInput:focus { z-index: 1; position: relative; } /* Ensure focus shadow is on top */
+  .clearButton {
+      height: 40px; padding: 0 0.8rem; border: 1px solid #d1d5db; border-left: none;
+      background-color: #f0f2f5; color: #555; cursor: pointer;
+      border-radius: 0 6px 6px 0; /* Rounded right */
+      font-weight: bold; transition: background-color 0.2s ease;
+      flex-shrink: 0;
+  }
+  .clearButton:hover { background-color: #e0e0e0; color: #000; }
+  
+  .loadingTextSmall, .errorMessageSmall {
+      font-size: 0.8rem; margin-top: 0.2rem; color: #6c757d;
+      padding-left: 0.1rem;
+  }
+  .errorMessageSmall { color: #dc3545; }
+  
+  
+  /* --- List Section & Table Styling --- */
+  .listSection { margin-top: 1rem; } /* Reduced top margin */
+  .tableContainer { overflow-x: auto; background-color: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+  .table { width: 100%; border-collapse: collapse; min-width: 800px; } /* Adjusted min-width */
+  
+  .table th, .table td {
+    border-bottom: 1px solid #e5e7eb; padding: 0.8rem 1rem; /* Adjusted padding */
+    text-align: left; font-size: 0.9rem; vertical-align: middle;
+  }
+  .table th {
+    background-color: #f9fafb; font-weight: 600; color: #374151;
+    font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .table tbody tr:hover { background-color: #f0fdf4; }
+  .table td:last-child { white-space: nowrap; }
+  
+  /* Centering specific columns for Payment History */
+  /* Amount Paid (3rd), For Month/Year (5th), Date Recorded (last) */
+  .table th:nth-child(3), .table td:nth-child(3),
+  .table th:nth-child(5), .table td:nth-child(5),
+  .table th:last-child, .table td:last-child {
+    text-align: center;
+  }
+  
+  /* Loading / No Data Text */
+  .loadingText, .noDataText { padding: 2rem; text-align: center; color: #6b7280; font-style: italic; }
+  
+  /* --- Message Styling --- */
+  .errorMessage, .successMessage {
+    padding: 0.9rem 1rem; border-radius: 6px; margin: 1rem 0;
+    font-size: 0.9rem; font-weight: 500; display: flex;
+    align-items: center; gap: 0.5rem;
+  }
+  .errorMessage { color: #991b1b; background-color: #fee2e2; border: 1px solid #fca5a5; }
+  .successMessage { color: #14532d; background-color: #dcfce7; border: 1px solid #86efac; }
+  
+  /* --- Responsive Stacking for Controls --- */
+  @media (max-width: 900px) { /* Adjusted breakpoint */
+    .controlsContainer {
+      flex-direction: column; /* Stack filter group and search */
+      align-items: stretch; /* Make them full width */
+    }
+    .filterContainer {
+        flex: none; /* Remove flex sizing */
+    }
+     .searchContainer {
+        flex: none; /* Remove flex sizing */
+        max-width: none; /* Allow full width */
+    }
+  }
+  @media (max-width: 500px) { /* Stack individual filters on very small screens */
+      .filterContainer {
+          flex-direction: column;
+          align-items: stretch;
+      }
+      .filterContainer .formGroup {
+          flex-basis: auto; /* Reset flex basis */
+      }
+  }
+  
+  

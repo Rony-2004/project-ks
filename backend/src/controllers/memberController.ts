@@ -1,4 +1,4 @@
-// backend/src/controllers/memberController.ts (Fixed Area Include)
+// backend/src/controllers/memberController.ts (Added isCurrentMonthPaid flag)
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { UserRole } from '@prisma/client';
@@ -17,7 +17,7 @@ export const getAllMembers = async (req: Request, res: Response) => {
         if (loggedInUser.role === 'areaAdmin') {
             whereClause = { assignedAreaAdminId: loggedInUser.id };
         } else if (loggedInUser.role !== 'admin') {
-            // If not admin or areaAdmin, deny access (or handle other roles if they exist)
+            // If not admin or areaAdmin, deny access
             return res.status(403).json({ message: 'Forbidden: Unknown role.' });
         }
         // Note: If role is 'admin', whereClause remains empty {}, fetching all members.
@@ -27,20 +27,61 @@ export const getAllMembers = async (req: Request, res: Response) => {
             where: whereClause,
             include: { // Include related data
                 assignedAreaAdmin: { select: { name: true } }, // Include assigned admin's name
-                // *** MODIFIED HERE: Ensure both id and name are selected for area ***
-                area: {
+                area: { // Ensure both id and name are selected for area
                     select: {
-                        id: true,   // <-- Ensure ID is selected
-                        name: true  // <-- Keep Name selected
+                        id: true,
+                        name: true
                     }
                 }
-                // *** END MODIFICATION ***
             },
             orderBy: { createdAt: 'desc' } // Order by creation date
         });
 
         console.log(`${logPrefix} Found ${members.length} members.`);
-        res.status(200).json(members); // Send the list of members
+
+        // --- ** NEW LOGIC START: Check current month payment status ** ---
+
+        // 1. Get current month and year
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1; // JS months are 0-indexed
+        const currentYear = now.getFullYear();
+        console.log(`${logPrefix} Checking payment status for Month: ${currentMonth}, Year: ${currentYear}`);
+
+        // 2. Extract member IDs from the fetched list
+        const memberIds = members.map(member => member.id);
+
+        // 3. Find payments for these members for the current month/year (only if there are members)
+        let paidMemberIds = new Set<string>(); // Use a Set for efficient lookup
+        if (memberIds.length > 0) {
+            const currentMonthPayments = await prisma.payment.findMany({
+                where: {
+                    memberId: {
+                        in: memberIds // Filter by the members fetched
+                    },
+                    paymentMonth: currentMonth,
+                    paymentYear: currentYear
+                },
+                select: {
+                    memberId: true // Only need memberId to know who paid
+                }
+            });
+            // Create a Set of member IDs who have paid this month
+            paidMemberIds = new Set(currentMonthPayments.map(p => p.memberId));
+            console.log(`${logPrefix} Found ${paidMemberIds.size} members with payment recorded for ${currentMonth}/${currentYear}.`);
+        }
+
+        // 4. Map members to include the payment status flag
+        const membersWithStatus = members.map(member => ({
+            ...member, // Spread existing member data (including area, assignedAreaAdmin)
+            isCurrentMonthPaid: paidMemberIds.has(member.id) // Add the boolean flag
+        }));
+
+        // --- ** NEW LOGIC END ** ---
+
+        // 5. Send the modified list back
+        console.log(`${logPrefix} Sending ${membersWithStatus.length} members with payment status.`);
+        res.status(200).json(membersWithStatus); // Send members with the added flag
+        // Note: The original 'res.status(200).json(members);' line is replaced by the line above
 
     } catch (error: any) {
         console.error(`${logPrefix} Prisma Error:`, error);

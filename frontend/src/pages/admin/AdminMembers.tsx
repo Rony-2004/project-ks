@@ -1,13 +1,30 @@
-// frontend/src/pages/admin/AdminMembers.tsx (FULL CODE with Area Filter Added)
+// frontend/src/pages/admin/AdminMembers.tsx (Fixed Filter/Search Layout)
 import React, { useState, useEffect, FormEvent, useMemo, ChangeEvent } from 'react';
 import {
     getMembers, addMember, deleteMember, updateMember,
     MemberData, NewMemberData, UpdateMemberData // Interfaces now include areaId
 } from '../../services/memberService';
-// --- ** NEW **: Import Area service and interface ---
+// Import Area service and interface
 import { getAllAreas, Area } from '../../services/areaService'; // Create this service file next
-import styles from './AdminMembers.module.css';
+import styles from './AdminMembers.module.css'; // Import the CSS Module
 import { FaEdit, FaTrashAlt, FaSearch } from 'react-icons/fa';
+
+// Define Area type locally if not already globally available via Area service export
+// interface Area {
+//     id: string;
+//     name: string;
+// }
+
+// Add isCurrentMonthPaid to MemberData if needed for payment status buttons (assuming backend provides it)
+// interface MemberData {
+//   // ... other existing fields
+//   area?: { id: string; name: string; } | null;
+//   areaId?: string;
+//   assignedAreaAdmin?: { name: string; } | null; // Keep this if needed
+//   assignedAreaAdminId?: string | null;
+//   isCurrentMonthPaid?: boolean; // <-- Assumed field from backend for payment status feature
+// }
+
 
 const AdminMembers: React.FC = () => {
     // --- State Variables ---
@@ -19,8 +36,11 @@ const AdminMembers: React.FC = () => {
     const [areasList, setAreasList] = useState<Area[]>([]);
     const [areasLoading, setAreasLoading] = useState<boolean>(true);
     const [areasError, setAreasError] = useState<string | null>(null);
-    // --- ** NEW ** State for the Area Filter Dropdown ---
+    // State for the Area Filter Dropdown
     const [selectedAreaFilter, setSelectedAreaFilter] = useState<string>(''); // '' means 'All Areas'
+    // State for Payment Status Filter (Add if implementing this feature)
+    // const [paymentStatusFilter, setPaymentStatusFilter] = useState<'all' | 'paid' | 'due'>('all');
+
 
     // Add Form state
     const [newName, setNewName] = useState('');
@@ -48,6 +68,7 @@ const AdminMembers: React.FC = () => {
     const fetchMembers = async () => {
         setIsLoading(true); setFetchError(null);
         try {
+            // Assumes getMembers fetches members including area and isCurrentMonthPaid
             const data = await getMembers();
             setMembersList(data ?? []);
         } catch (error: any) { setFetchError(error.message || 'Failed to load members'); }
@@ -62,7 +83,7 @@ const AdminMembers: React.FC = () => {
             setAreasList(data ?? []);
         } catch (error: any) {
             console.error("Failed to fetch areas:", error);
-            setAreasError(error.message || 'Failed to load areas. Members cannot be added/edited.');
+            setAreasError(error.message || 'Failed to load areas.');
         } finally {
             setAreasLoading(false);
         }
@@ -85,7 +106,7 @@ const AdminMembers: React.FC = () => {
         const newMemberData: NewMemberData = {
             name: newName,
             phone: newPhone,
-            monthlyAmount: newAmount,
+            monthlyAmount: newAmount, // Ensure conversion if needed
             areaId: newAreaId,
             assignedAreaAdminId: newAssignedId || null
         };
@@ -99,19 +120,13 @@ const AdminMembers: React.FC = () => {
     };
 
     const handleDelete = async (memberId: string, memberName: string) => {
-        console.log(`--- handleDelete CALLED for ID: ${memberId}, Name: ${memberName}`);
         if (!window.confirm(`Delete Member '${memberName}' (ID: ${memberId})?`)) {
-            console.log("--- Delete cancelled by user.");
             return;
         }
-        console.log(`>>> Preparing to call deleteMember service for ID: ${memberId}`);
         try {
             await deleteMember(memberId);
-            console.log(`<<< Service call deleteMember finished for ID: ${memberId} (No error caught by handleDelete)`);
             alert('Member deleted successfully.');
-            console.log(`>>> Calling fetchMembers to refresh list...`);
-            await fetchMembers();
-            console.log(`<<< fetchMembers call finished.`);
+            fetchMembers(); // Refresh list
         } catch (error: any) {
             console.error('>>> handleDelete CATCH block error:', error);
             alert(`Failed to delete Member: ${error.message}`);
@@ -125,7 +140,7 @@ const AdminMembers: React.FC = () => {
             name: member.name,
             phone: member.phone,
             monthlyAmount: member.monthlyAmount.toString(),
-            areaId: member.areaId,
+            areaId: member.areaId, // areaId should exist on MemberData
             assignedAreaAdminId: member.assignedAreaAdminId ?? ''
         });
         setEditError(null); setEditSuccess(null); setIsEditModalOpen(true);
@@ -153,6 +168,7 @@ const AdminMembers: React.FC = () => {
             assignedAreaAdminId: editFormData.assignedAreaAdminId === '' ? null : editFormData.assignedAreaAdminId
         };
         if (updateData.monthlyAmount !== undefined && isNaN(updateData.monthlyAmount)) { setEditError("Amount must be a number."); setIsUpdating(false); return; }
+        // Remove undefined fields before sending
         Object.keys(updateData).forEach(key => updateData[key as keyof UpdateMemberData] === undefined && delete updateData[key as keyof UpdateMemberData]);
 
         try {
@@ -164,28 +180,31 @@ const AdminMembers: React.FC = () => {
         finally { setIsUpdating(false); }
     };
 
-    // --- ** UPDATED ** Memoized Filtering Logic (Search + Area Filter) ---
+    // --- Memoized Filtering Logic ---
     const filteredMembers = useMemo(() => {
-        let members = membersList; // Start with the full list
-
-        // 1. Filter by Search Query
+        let members = membersList;
+        // Filter by Search Query
         if (searchQuery && searchQuery.trim() !== '') {
             const lowerCaseQuery = searchQuery.toLowerCase();
             members = members.filter(member =>
                 member.name.toLowerCase().includes(lowerCaseQuery) ||
-                member.phone.includes(searchQuery) ||
+                member.phone.includes(searchQuery) || // Keep original phone search
                 (member.area?.name ?? '').toLowerCase().includes(lowerCaseQuery)
             );
         }
-
-        // 2. Filter by Selected Area
-        if (selectedAreaFilter !== '') { // Apply if an area is selected (not 'All Areas')
+        // Filter by Selected Area
+        if (selectedAreaFilter !== '') {
             members = members.filter(member => member.areaId === selectedAreaFilter);
         }
+        // Add Payment Status Filter if state exists
+        // if (paymentStatusFilter === 'paid') {
+        //     members = members.filter(member => member.isCurrentMonthPaid === true);
+        // } else if (paymentStatusFilter === 'due') {
+        //     members = members.filter(member => !member.isCurrentMonthPaid);
+        // }
+        return members;
+    }, [membersList, searchQuery, selectedAreaFilter /*, paymentStatusFilter */ ]); // Add paymentStatusFilter if using
 
-        return members; // Return the final filtered list
-    // Add selectedAreaFilter to the dependency array
-    }, [membersList, searchQuery, selectedAreaFilter]); // <-- Dependency array updated
 
     // --- Component Return (JSX) ---
     return (
@@ -219,53 +238,67 @@ const AdminMembers: React.FC = () => {
                 </form>
             </div>
 
-            {/* --- ** NEW ** Area Filter Dropdown --- */}
-            <div className={styles.filterContainer}>
-                <label htmlFor="areaFilter" className={styles.filterLabel}>Filter by Area:</label>
-                <select
-                    id="areaFilter"
-                    name="areaFilter"
-                    value={selectedAreaFilter}
-                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedAreaFilter(e.target.value)}
-                    className={styles.filterSelect}
-                    disabled={areasLoading || !!areasError}
-                >
-                    <option value="">-- All Areas --</option>
-                    {areasList.map(area => (
-                        <option key={area.id} value={area.id}>
-                            {area.name}
-                        </option>
-                    ))}
-                </select>
-                {areasLoading && <span className={styles.loadingTextSmall}> Loading areas...</span>}
-                {areasError && <span className={styles.errorMessageSmall}> Error loading areas</span>}
-            </div>
+            {/* --- ** MODIFIED: Added Controls Container Wrapper ** --- */}
+            <div className={styles.controlsContainer}>
 
-            {/* Search Bar */}
-             <div className={styles.searchContainer}>
-                 <FaSearch className={styles.searchIcon} />
-                 <input type="search" placeholder="Search members by name, phone, area..."
-                     value={searchQuery}
-                     onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                     className={styles.searchInput}
-                 />
-             </div>
+                {/* Search Bar */}
+                 <div className={styles.searchContainer}>
+                     {/* Added Label for Accessibility */}
+                     <label htmlFor="memberSearch" className={styles.filterLabel}>Search:</label>
+                     <div style={{ position: 'relative', width: '100%' }}> {/* Wrapper for input+icon */}
+                        <FaSearch className={styles.searchIcon} />
+                        <input
+                            id="memberSearch"
+                            type="search"
+                            placeholder="Search by name, phone, area..."
+                            value={searchQuery}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                            className={styles.searchInput}
+                        />
+                    </div>
+                 </div>
+
+                {/* Area Filter Dropdown */}
+                <div className={styles.filterContainer}>
+                    <label htmlFor="areaFilter" className={styles.filterLabel}>Filter by Area:</label>
+                    <select
+                        id="areaFilter"
+                        name="areaFilter"
+                        value={selectedAreaFilter}
+                        onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedAreaFilter(e.target.value)}
+                        className={styles.filterSelect}
+                        disabled={areasLoading || !!areasError || areasList.length === 0}
+                        title="Filter members by area"
+                    >
+                        <option value="">-- All Areas --</option>
+                        {areasList.map(area => (
+                            <option key={area.id} value={area.id}>
+                                {area.name}
+                            </option>
+                        ))}
+                    </select>
+                     {areasLoading && <span className={styles.loadingTextSmall}> Loading...</span>}
+                     {areasError && <span className={styles.errorMessageSmall}> Error</span>}
+                </div>
+                {/* --- End Filter --- */}
+
+            </div>
+            {/* --- End Controls Container Wrapper --- */}
+
 
             {/* Display Members List */}
             <div className={styles.listSection}>
-                {/* Added filter status text */}
-                <h3>
-                    Current Members
-                    {selectedAreaFilter && areasList.find(a => a.id === selectedAreaFilter)
-                        ? ` (Filtered by Area: ${areasList.find(a => a.id === selectedAreaFilter)?.name})`
-                        : ''}
-                </h3>
+                 <h3>
+                     Current Members
+                     {selectedAreaFilter && areasList.find(a => a.id === selectedAreaFilter)
+                         ? ` (Filtered by Area: ${areasList.find(a => a.id === selectedAreaFilter)?.name})`
+                         : ''}
+                 </h3>
                 {isLoading && <p className={styles.loadingText}>Loading members...</p>}
                 {fetchError && <p className={styles.errorMessage}>{fetchError}</p>}
-                {/* Updated message based on search AND filter */}
                 {!isLoading && !fetchError && filteredMembers.length === 0 && (
                     <p className={styles.noDataText}>
-                        {searchQuery || selectedAreaFilter ? 'No members found matching your filters.' : 'No members found.'}
+                        {searchQuery || selectedAreaFilter ? 'No members found matching filters.' : 'No members found.'}
                     </p>
                 )}
                 {!isLoading && !fetchError && filteredMembers.length > 0 && (
@@ -273,21 +306,21 @@ const AdminMembers: React.FC = () => {
                         <table className={styles.table}>
                             <thead>
                                 <tr>
-                                    <th>ID</th><th>Name</th><th>Phone</th>
-                                    <th>Area</th>
+                                    <th>ID</th><th>Name</th><th>Phone</th><th>Area</th>
                                     <th>Amount</th><th>Assigned Area Admin</th><th>Created At</th><th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {/* Use the filteredMembers list here */}
                                 {filteredMembers.map((member) => (
                                     <tr key={member.id}>
                                         <td>{member.id}</td><td>{member.name}</td><td>{member.phone}</td>
                                         <td>{member.area?.name ?? 'N/A'}</td>
-                                        <td>{member.monthlyAmount}</td>
+                                        {/* Use amountCell for centering */}
+                                        <td className={styles.amountCell}>{member.monthlyAmount}</td>
                                         <td>{member.assignedAreaAdmin?.name ?? 'N/A'}</td>
                                         <td>{new Date(member.createdAt).toLocaleDateString()}</td>
-                                        <td>
+                                        {/* Use actionCell for centering */}
+                                        <td className={styles.actionCell}>
                                             <button onClick={() => handleEditClick(member)} className={`${styles.actionButton} ${styles.editButton}`} title="Edit Member"><FaEdit /></button>
                                             <button onClick={() => handleDelete(member.id, member.name)} className={`${styles.actionButton} ${styles.deleteButton}`} title="Delete Member"><FaTrashAlt /></button>
                                         </td>
@@ -297,7 +330,7 @@ const AdminMembers: React.FC = () => {
                         </table>
                     </div>
                 )}
-            </div>
+             </div>
 
             {/* Edit Member Modal */}
              {isEditModalOpen && editingMember && (
@@ -329,10 +362,11 @@ const AdminMembers: React.FC = () => {
                          </form>
                      </div>
                  </div>
-             )}
+            )}
             {/* End Edit Modal */}
 
         </div> // End container div
     );
 };
+
 export default AdminMembers;

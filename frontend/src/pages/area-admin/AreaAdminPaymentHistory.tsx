@@ -1,9 +1,8 @@
-// frontend/src/pages/area-admin/AreaAdminPaymentHistory.tsx (Derive Areas from Payments - Minimal Changes)
+// frontend/src/pages/area-admin/AreaAdminPaymentHistory.tsx (Fixed Area Column)
 import React, { useState, useEffect, useMemo, ChangeEvent } from 'react';
 // ** REMOVED getAllAreas import **
-// import { getAllAreas, Area } from '../../services/areaService';
 import { getMyAreaPayments, PaymentDataWithMember } from '../../services/paymentService'; // Verify path
-import styles from '../admin/AdminMembers.module.css'; // Verify path & CSS file existence
+import styles from '../admin/AreaAdminPaymentHistory.module.css'; // Verify path & CSS file existence
 import { FaSearch } from 'react-icons/fa'; // Import Search Icon
 
 // Define Area type locally
@@ -27,7 +26,6 @@ const AreaAdminPaymentHistory: React.FC = () => {
     const [filterYear, setFilterYear] = useState<string>(currentYear.toString()); // Default: Current year
     // ** NEW: State for the derived list of assigned areas **
     const [assignedAreas, setAssignedAreas] = useState<Area[]>([]);
-    // ** REMOVED state related to fetching all areas **
     // ** NEW: State for the Area Filter Dropdown **
     const [selectedAreaFilter, setSelectedAreaFilter] = useState<string>(''); // '' means 'All Areas'
 
@@ -38,7 +36,7 @@ const AreaAdminPaymentHistory: React.FC = () => {
         setError(null);
         console.log('[AreaAdminPaymentHistory] Fetching payment history...');
         try {
-            // ** IMPORTANT: Ensure getMyAreaPayments returns member with area { id, name } included **
+            // ** IMPORTANT: Ensure getMyAreaPayments returns member with area { id, name } and areaId included **
             const data = await getMyAreaPayments();
             setPayments(Array.isArray(data) ? data : []);
             console.log('[AreaAdminPaymentHistory] Fetched payments count:', data?.length ?? 0);
@@ -50,8 +48,6 @@ const AreaAdminPaymentHistory: React.FC = () => {
         }
     };
 
-    // ** REMOVED fetchAreas function **
-
     // Run fetchPayments on mount
     useEffect(() => {
         fetchPayments();
@@ -59,7 +55,7 @@ const AreaAdminPaymentHistory: React.FC = () => {
 
     // ** NEW: Effect to derive assigned areas from the PAYMENTS list **
     useEffect(() => {
-        console.log('[DeriveAreasEffect - Payments] Running. Payments length:', payments?.length);
+        // console.log('[DeriveAreasEffect - Payments] Running. Payments length:', payments?.length); // Optional log
         if (payments && payments.length > 0) {
             const uniqueAreas = new Map<string, Area>();
             payments.forEach(payment => {
@@ -68,17 +64,16 @@ const AreaAdminPaymentHistory: React.FC = () => {
                 const areaName = payment.member?.area?.name;
 
                 if (areaId && areaName && !uniqueAreas.has(areaId)) {
-                    // console.log(`[DeriveAreasEffect - Payments] Adding unique area:`, { id: areaId, name: areaName });
                     uniqueAreas.set(areaId, { id: areaId, name: areaName });
                 }
             });
             // Convert map values back to an array and sort alphabetically by name
             const sortedAreas = Array.from(uniqueAreas.values()).sort((a, b) => a.name.localeCompare(b.name));
             setAssignedAreas(sortedAreas);
-            console.log('[DeriveAreasEffect - Payments] Setting assignedAreas:', sortedAreas);
+            // console.log('[DeriveAreasEffect - Payments] Setting assignedAreas:', sortedAreas); // Optional log
         } else {
             setAssignedAreas([]);
-            console.log('[DeriveAreasEffect - Payments] Setting assignedAreas to empty array.');
+            // console.log('[DeriveAreasEffect - Payments] Setting assignedAreas to empty array.'); // Optional log
         }
     }, [payments]); // Re-run whenever the payments list changes
 
@@ -87,16 +82,17 @@ const AreaAdminPaymentHistory: React.FC = () => {
     const formatMonthYear = (month: number, year: number): string => {
        try { if (!month || !year || isNaN(month) || isNaN(year)) return 'N/A'; const date = new Date(year, month - 1); return date.toLocaleString('default', { month: 'long', year: 'numeric'}); } catch (e) { return 'Invalid Date'; }
     };
-    const formatDate = (dateString: string | null | undefined): string => {
-       try { if (!dateString) return 'N/A'; return new Date(dateString).toLocaleDateString(); } catch (e) { return 'Invalid Date'; }
-    };
+    // ** REMOVED formatDate function **
+    // const formatDate = (dateString: string | null | undefined): string => {
+    //    try { if (!dateString) return 'N/A'; return new Date(dateString).toLocaleDateString(); } catch (e) { return 'Invalid Date'; }
+    // };
     const formatDateTime = (dateString: string | null | undefined): string => {
        try { if (!dateString) return 'N/A'; return new Date(dateString).toLocaleString(); } catch (e) { return 'Invalid Date'; }
     };
 
     // --- ** UPDATED ** Filter & Search Logic ---
     const filteredAndSearchedPayments = useMemo(() => {
-        // console.log('[AreaAdminPaymentHistory] Filtering/Searching payments...'); // Reduced logging
+        // console.log('[AreaAdminPaymentHistory] Filtering/Searching payments...');
         const lowerCaseSearchQuery = searchQuery.toLowerCase();
         const monthFilter = parseInt(filterMonth, 10) || 0;
         const yearFilter = parseInt(filterYear, 10) || 0;
@@ -117,14 +113,14 @@ const AreaAdminPaymentHistory: React.FC = () => {
             // Combine all filters
             return monthMatch && yearMatch && searchMatch && areaMatch; // Added areaMatch
         });
-        // console.log(`[AreaAdminPaymentHistory] Filtering done. Found ${results.length} matching payments.`); // Reduced logging
+        // console.log(`[AreaAdminPaymentHistory] Filtering done. Found ${results.length} matching payments.`);
         return results;
     // Add selectedAreaFilter to dependency array
     }, [payments, filterMonth, filterYear, searchQuery, selectedAreaFilter]); // <-- Added dependency
 
 
     // --- Component Return (JSX) ---
-     // console.log(`[AreaAdminPaymentHistory] Starting JSX render... isLoading=${isLoading}, error=${error}`); // Reduced logging
+     // console.log(`[AreaAdminPaymentHistory] Starting JSX render... isLoading=${isLoading}, error=${error}`);
     return (
         <div className={styles.container}>
             <h2>My Payment Recording History</h2>
@@ -159,7 +155,7 @@ const AreaAdminPaymentHistory: React.FC = () => {
                              value={selectedAreaFilter}
                              onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedAreaFilter(e.target.value)}
                              className={styles.filterSelectSmall} // Using same class as month filter
-                             // ** UPDATED: Disable if payments loading OR no assigned areas derived **
+                             // Disable if payments loading OR no assigned areas derived
                              disabled={isLoading || assignedAreas.length === 0}
                              title="Filter payments by member area"
                          >
@@ -184,11 +180,11 @@ const AreaAdminPaymentHistory: React.FC = () => {
                  </div>
              </div>
 
-            {/* Display List Section (Unchanged Structure) */}
+            {/* Display List Section */}
             <div className={styles.listSection}>
                  <h3>
                      Payment Records
-                     {/* ** UPDATED: Display filter status including Area ** */}
+                     {/* Display filter status */}
                      {selectedAreaFilter && assignedAreas.find(a => a.id === selectedAreaFilter)
                          ? ` (Area: ${assignedAreas.find(a => a.id === selectedAreaFilter)?.name})`
                          : ''}
@@ -199,7 +195,6 @@ const AreaAdminPaymentHistory: React.FC = () => {
                  {!isLoading && error && <p className={styles.errorMessage}>{error}</p>}
                  {!isLoading && !error && filteredAndSearchedPayments.length === 0 && (
                      <p className={styles.noDataText}>
-                         {/* ** UPDATED: Added selectedAreaFilter to condition ** */}
                          {(filterMonth || filterYear || searchQuery || selectedAreaFilter) ? 'No payment records match the current filters/search.' : 'No payment records found.'}
                      </p>
                  )}
@@ -208,9 +203,14 @@ const AreaAdminPaymentHistory: React.FC = () => {
                          <table className={styles.table}>
                              <thead>
                                  <tr>
-                                     <th>Payment ID</th><th>Member Name</th><th>Amount Paid</th><th>Method</th>
-                                     <th>For Month/Year</th><th>Date Paid</th><th>Date Recorded</th>
-                                     {/* No Actions column */}
+                                     <th>Payment ID</th>
+                                     <th>Member Name</th>
+                                     <th>Amount Paid</th>
+                                     <th>Method</th>
+                                     <th>For Month/Year</th>
+                                     {/* *** MODIFICATION 1: Changed header from "Date Paid" to "Area" *** */}
+                                     <th>Area</th>
+                                     <th>Date Recorded</th>
                                  </tr>
                              </thead>
                              <tbody>
@@ -221,7 +221,9 @@ const AreaAdminPaymentHistory: React.FC = () => {
                                          <td>{payment.amountPaid ?? 'N/A'}</td>
                                          <td>{payment.paymentMethod ?? 'N/A'}</td>
                                          <td>{formatMonthYear(payment.paymentMonth, payment.paymentYear)}</td>
-                                         <td>{formatDate(payment.paymentDate)}</td>
+                                         {/* *** MODIFICATION 2: Changed cell content to display Area Name *** */}
+                                         <td>{payment.member?.area?.name ?? 'N/A'}</td>
+                                         {/* Keep Date Recorded */}
                                          <td>{formatDateTime(payment.createdAt)}</td>
                                      </tr>
                                  ))}

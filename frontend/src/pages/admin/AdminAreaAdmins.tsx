@@ -1,4 +1,4 @@
-// frontend/src/pages/admin/AdminAreaAdmins.tsx (Display Full ID)
+// frontend/src/pages/admin/AdminAreaAdmins.tsx (Inline Assign Areas)
 import React, { useState, useEffect, FormEvent, useMemo, ChangeEvent } from 'react';
 import Select, { MultiValue, StylesConfig } from 'react-select';
 import {
@@ -6,7 +6,7 @@ import {
     AreaAdminData, NewAreaAdminData, UpdateAreaAdminData
 } from '../../services/areaAdminService';
 import { getAllAreas, Area } from '../../services/areaService';
-import styles from './AdminAreaAdmins.module.css';
+import styles from './AdminAreaAdmins.module.css'; // Ensure this CSS file is imported
 import { FaEdit, FaTrashAlt, FaSearch, FaPlus } from 'react-icons/fa';
 
 interface SelectOption {
@@ -14,16 +14,16 @@ interface SelectOption {
     label: string;
 }
 
-// --- Styles for react-select (Keep as provided) ---
-const selectStyles: StylesConfig<SelectOption, true> = {
+// --- Styles for react-select ---
+const selectStyles: StylesConfig<SelectOption, true> = { // For MultiSelect
     control: (baseStyles, state) => ({
-        ...baseStyles, minHeight: '38px', height: '38px',
+        ...baseStyles, minHeight: '38px', // Match input height if possible
         borderColor: state.isFocused ? '#4f46e5' : '#d1d5db',
         boxShadow: state.isFocused ? '0 0 0 3px rgba(79, 70, 229, 0.15)' : baseStyles.boxShadow,
         '&:hover': { borderColor: state.isFocused ? '#4f46e5' : '#9ca3af', },
         backgroundColor: '#f9fafb', fontSize: '1rem',
     }),
-    valueContainer: (baseStyles) => ({ ...baseStyles, height: '36px', padding: '0 8px', overflow: 'auto' }),
+    valueContainer: (baseStyles) => ({ ...baseStyles, padding: '1px 6px' }), // Adjust padding
     input: (baseStyles) => ({ ...baseStyles, margin: '0px', padding: '0px' }),
     indicatorsContainer: (baseStyles) => ({ ...baseStyles, height: '36px' }),
     placeholder: (baseStyles) => ({ ...baseStyles, color: '#6b7280', fontSize: '0.95rem' }),
@@ -39,6 +39,37 @@ const selectStyles: StylesConfig<SelectOption, true> = {
 };
 // --- End react-select styles ---
 
+// Styles for the single select filter dropdown
+const singleSelectStyles: StylesConfig<SelectOption, false> = { // For Single Select
+     control: (base, state) => ({
+        ...base,
+        height: '40px',
+        minHeight: '40px',
+        boxSizing: 'border-box',
+        backgroundColor: '#f0f2f5',
+        border: state.isFocused ? '1px solid #1890ff' : '1px solid #d9d9d9',
+        borderRadius: '6px',
+        boxShadow: state.isFocused ? '0 0 0 3px rgba(24, 144, 255, 0.2)' : 'none',
+        '&:hover': { borderColor: state.isFocused ? '#1890ff' : '#a0a0a0' },
+        fontSize: '0.95rem',
+     }),
+     valueContainer: (base) => ({ ...base, padding: '0 0.8rem', height: '40px' }),
+     input: (base) => ({ ...base, margin: 0, padding: 0 }),
+     indicatorsContainer: (base) => ({ ...base, height: '38px' }),
+     singleValue: (base) => ({ ...base, color: '#000000' }),
+     placeholder: (base) => ({ ...base, color: '#555', opacity: 0.8 }),
+     menu: (base) => ({ ...base, zIndex: 5 }), // Ensure menu appears above table
+     option: (base, state) => ({
+         ...base,
+         fontSize: '0.95rem',
+         padding: '0.6rem 0.8rem',
+         backgroundColor: state.isSelected ? '#4f46e5' : state.isFocused ? '#e0e7ff' : base.backgroundColor,
+         color: state.isSelected ? 'white' : '#333',
+         '&:active': { backgroundColor: state.isSelected ? '#4338ca' : '#c7d2fe' },
+     }),
+};
+
+
 const AdminAreaAdmins: React.FC = () => {
     // --- State Variables ---
     const [areaAdminsList, setAreaAdminsList] = useState<AreaAdminData[]>([]);
@@ -48,8 +79,9 @@ const AdminAreaAdmins: React.FC = () => {
     const [areasList, setAreasList] = useState<Area[]>([]);
     const [areasLoading, setAreasLoading] = useState<boolean>(true);
     const [areasError, setAreasError] = useState<string | null>(null);
-    const [areaOptions, setAreaOptions] = useState<SelectOption[]>([]);
-    const [selectedAreaFilter, setSelectedAreaFilter] = useState<string>('');
+    const [areaOptions, setAreaOptions] = useState<SelectOption[]>([]); // For MultiSelect
+    const [filterAreaOptions, setFilterAreaOptions] = useState<SelectOption[]>([]); // For SingleSelect Filter
+    const [selectedAreaFilter, setSelectedAreaFilter] = useState<SelectOption | null>(null); // For SingleSelect Filter state
 
     // Add Form state
     const [newName, setNewName] = useState('');
@@ -83,9 +115,14 @@ const AdminAreaAdmins: React.FC = () => {
         setAreasLoading(true); setAreasError(null);
         try {
             const data = await getAllAreas();
-            setAreasList(data ?? []);
-            const options = data.map(area => ({ value: area.id, label: area.name.toUpperCase() }));
-            setAreaOptions(options);
+            const validAreas = data ?? [];
+            setAreasList(validAreas);
+            // Options for MultiSelect (Assign/Edit)
+            const multiOptions = validAreas.map(area => ({ value: area.id, label: area.name.toUpperCase() }));
+            setAreaOptions(multiOptions);
+             // Options for SingleSelect Filter (including "All")
+            const filterOptions = [{ value: '', label: 'All Assigned Areas' }, ...multiOptions];
+            setFilterAreaOptions(filterOptions);
         } catch (error: any) {
             console.error("Failed to fetch areas:", error);
             setAreasError(error.message || 'Failed to load areas.');
@@ -113,7 +150,7 @@ const AdminAreaAdmins: React.FC = () => {
             await addAreaAdmin(newAdminData);
             setFormSuccess('Area Admin added successfully!');
             setNewName(''); setNewEmail(''); setNewPhone(''); setNewPassword(''); setNewAssignedAreaIds([]);
-            fetchAreaAdmins();
+            fetchAreaAdmins(); // Refresh list
         } catch (error: any) { setFormError(error.message || 'Failed to add admin.'); }
         finally { setIsSubmitting(false); }
     };
@@ -123,7 +160,7 @@ const AdminAreaAdmins: React.FC = () => {
         setFetchError(null);
         try {
             await deleteAreaAdmin(adminId);
-            alert('Area Admin deleted successfully.'); fetchAreaAdmins();
+            alert('Area Admin deleted successfully.'); fetchAreaAdmins(); // Refresh list
         } catch (error: any) {
             console.error('Delete error:', error);
             alert(`Failed to delete Area Admin: ${error.message}`);
@@ -138,7 +175,7 @@ const AdminAreaAdmins: React.FC = () => {
             email: admin.email,
             phone: admin.phone ?? '',
             assignedAreaIds: admin.assignedAreas?.map(area => area.id) ?? [],
-            password: '',
+            password: '', // Reset password fields
             confirmPassword: ''
         });
         setEditError(null); setEditSuccess(null); setIsEditModalOpen(true);
@@ -151,6 +188,7 @@ const AdminAreaAdmins: React.FC = () => {
         setEditFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    // Handler for MultiSelect in forms
     const handleNewAreaSelectChange = (selectedOptions: MultiValue<SelectOption>) => {
         const selectedIds = selectedOptions ? selectedOptions.map(option => option.value) : [];
         setNewAssignedAreaIds(selectedIds);
@@ -159,6 +197,12 @@ const AdminAreaAdmins: React.FC = () => {
         const selectedIds = selectedOptions ? selectedOptions.map(option => option.value) : [];
         setEditFormData(prev => ({ ...prev, assignedAreaIds: selectedIds }));
     };
+
+     // ** NEW: Handler for SingleSelect Area Filter **
+     const handleAreaFilterChange = (selectedOption: SelectOption | null) => {
+        setSelectedAreaFilter(selectedOption); // Store the whole option or just the value
+    };
+
 
     const handleUpdateSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -189,12 +233,13 @@ const AdminAreaAdmins: React.FC = () => {
         try {
             await updateAreaAdmin(editingAdmin.id, updateData);
             setEditSuccess('Area Admin updated successfully!');
-            fetchAreaAdmins();
+            fetchAreaAdmins(); // Refresh list
             handleEditModalClose();
         } catch (error: any) { setEditError(error.message || 'Failed to update admin.'); }
         finally { setIsUpdating(false); }
     };
 
+    // Helper to get selected options for react-select MultiSelect
     const getSelectedOptions = (ids: string[]): SelectOption[] => {
         return areaOptions.filter(option => ids.includes(option.value));
     };
@@ -202,6 +247,7 @@ const AdminAreaAdmins: React.FC = () => {
     // --- Memoized Filtering Logic ---
     const filteredAreaAdmins = useMemo(() => {
         let admins = areaAdminsList;
+        const filterValue = selectedAreaFilter?.value ?? ''; // Get value from selected option
 
         // 1. Filter by Search Query
         if (searchQuery && searchQuery.trim() !== '') {
@@ -214,13 +260,14 @@ const AdminAreaAdmins: React.FC = () => {
         }
 
         // 2. Filter by Selected Assigned Area
-        if (selectedAreaFilter !== '') {
+        if (filterValue !== '') { // Use filterValue here
             admins = admins.filter(admin =>
-                admin.assignedAreas && admin.assignedAreas.some(area => area.id === selectedAreaFilter)
+                admin.assignedAreas && admin.assignedAreas.some(area => area.id === filterValue)
             );
         }
 
         return admins;
+    // Updated dependency array
     }, [areaAdminsList, searchQuery, selectedAreaFilter]);
 
 
@@ -231,7 +278,6 @@ const AdminAreaAdmins: React.FC = () => {
 
             {/* Add Form */}
             <div className={styles.addForm}>
-                 {/* ... form content ... */}
                  <h3>Add New Area Admin</h3>
                  {areasLoading && <p>Loading areas...</p>}
                  {areasError && <p className={styles.errorMessage}>Error loading areas: {areasError}</p>}
@@ -241,14 +287,15 @@ const AdminAreaAdmins: React.FC = () => {
                          <div className={styles.formGroup}><label htmlFor="email">Email *</label><input type="email" id="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required /></div>
                          <div className={styles.formGroup}><label htmlFor="phone">Phone</label><input type="tel" id="phone" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} /></div>
                          <div className={styles.formGroup}><label htmlFor="password">Initial Password *</label><input type="password" id="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required autoComplete="new-password" /></div>
-                         <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
+                         {/* ** MODIFICATION: Removed inline style gridColumn ** */}
+                         <div className={styles.formGroup}>
                              <label htmlFor="assignAreaIds">Assign Areas *</label>
                              <Select id="assignAreaIds" isMulti options={areaOptions}
                                  value={getSelectedOptions(newAssignedAreaIds)}
                                  onChange={handleNewAreaSelectChange}
                                  isLoading={areasLoading} isDisabled={areasLoading || !!areasError}
                                  placeholder="Select areas..." closeMenuOnSelect={false}
-                                 styles={selectStyles}
+                                 styles={selectStyles} // Use multi-select styles
                              />
                          </div>
                      </div>
@@ -258,42 +305,48 @@ const AdminAreaAdmins: React.FC = () => {
                          {isSubmitting ? 'Adding...' : 'Add Area Admin'}
                      </button>
                  </form>
-            </div>
+             </div>
 
             {/* --- Controls Bar (Search Left, Filter Right) --- */}
             <div className={styles.controlsContainer}>
 
                 {/* Search Bar */}
                 <div className={styles.searchContainer}>
-                    <FaSearch className={styles.searchIcon} />
-                    <input
-                        type="search"
-                        placeholder="Search by name, email, area..."
-                        value={searchQuery}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                        className={styles.searchInput}
-                    />
+                     {/* ** Added Label for Accessibility ** */}
+                     <label htmlFor="adminSearch" className={styles.filterLabel}>Search:</label>
+                     <div style={{ position: 'relative', width: '100%' }}> {/* Wrapper for input+icon */}
+                        <FaSearch className={styles.searchIcon} />
+                        <input
+                            id="adminSearch"
+                            type="search"
+                            placeholder="Search by name, email, area..."
+                            value={searchQuery}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                            className={styles.searchInput}
+                        />
+                    </div>
                 </div>
 
                 {/* Area Filter Dropdown */}
                 <div className={styles.filterContainer}>
                     <label htmlFor="areaFilter" className={styles.filterLabel}>Filter by Area:</label>
-                    <select
+                    {/* Using React-Select for consistent styling */}
+                    <Select
                         id="areaFilter"
                         name="areaFilter"
+                        options={filterAreaOptions}
                         value={selectedAreaFilter}
-                        onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedAreaFilter(e.target.value)}
-                        className={styles.filterSelect}
-                        disabled={areasLoading || !!areasError}
-                        title="Filter admins by assigned area"
-                    >
-                        <option value="">All Assigned Areas</option>
-                        {areasList.map(area => (
-                            <option key={area.id} value={area.id}>
-                                {area.name.toUpperCase()}
-                            </option>
-                        ))}
-                    </select>
+                        onChange={handleAreaFilterChange}
+                        isLoading={areasLoading}
+                        isDisabled={areasLoading || !!areasError || areasList.length === 0}
+                        placeholder="All Assigned Areas"
+                        isClearable={true} // Allow clearing selection
+                        styles={singleSelectStyles} // Apply single select styles
+                        classNamePrefix="react-select" // Optional: for more specific CSS targeting
+                    />
+                     {/* Error/Loading indicators if needed */}
+                     {/* {areasLoading && <span className={styles.loadingTextSmall}>...</span>} */}
+                     {/* {areasError && <span className={styles.errorMessageSmall}>Error</span>} */}
                 </div>
                 {/* --- End Filter --- */}
 
@@ -303,17 +356,15 @@ const AdminAreaAdmins: React.FC = () => {
 
             {/* Display List */}
             <div className={styles.listSection}>
-                <h3>
-                    Current Area Admins
-                    {selectedAreaFilter && areasList.find(a => a.id === selectedAreaFilter)
-                        ? ` (Filtered by Area: ${areasList.find(a => a.id === selectedAreaFilter)?.name.toUpperCase()})`
-                        : ''}
-                </h3>
+                 <h3>
+                     Current Area Admins
+                     {selectedAreaFilter?.value ? ` (Filtered by Area: ${selectedAreaFilter.label})` : ''}
+                 </h3>
                 {isLoading && <p className={styles.loadingText}>Loading area admins...</p>}
                 {fetchError && <p className={styles.errorMessage}>{fetchError}</p>}
                 {!isLoading && !fetchError && filteredAreaAdmins.length === 0 && (
                     <p className={styles.noDataText}>
-                        {searchQuery || selectedAreaFilter ? 'No area admins found matching filters.' : 'No Area Admins found.'}
+                        {searchQuery || selectedAreaFilter?.value ? 'No area admins found matching filters.' : 'No Area Admins found.'}
                     </p>
                 )}
                 {!isLoading && !fetchError && filteredAreaAdmins.length > 0 && (
@@ -329,9 +380,7 @@ const AdminAreaAdmins: React.FC = () => {
                             <tbody>
                                 {filteredAreaAdmins.map((admin) => (
                                     <tr key={admin.id}>
-                                        {/* ** MODIFIED: Display full ID ** */}
-                                        <td><code>{admin.id}</code></td>
-                                        {/* End Modification */}
+                                        <td><code>{admin.id}</code></td> {/* Display full ID */}
                                         <td>{admin.name}</td><td>{admin.email}</td><td>{admin.phone ?? 'N/A'}</td>
                                         <td>
                                             {admin.assignedAreas && admin.assignedAreas.length > 0
@@ -349,13 +398,12 @@ const AdminAreaAdmins: React.FC = () => {
                         </table>
                     </div>
                 )}
-            </div>
+             </div>
 
             {/* Edit Modal */}
             {isEditModalOpen && editingAdmin && (
                 <div className={styles.modalBackdrop}>
                     <div className={styles.modalContent}>
-                         {/* ... modal content ... */}
                          <h3>Edit Area Admin (ID: {editingAdmin.id})</h3>
                          {areasLoading && <p>Loading areas...</p>}
                          {areasError && <p className={styles.errorMessage}>Error loading areas: {areasError}</p>}
@@ -369,19 +417,11 @@ const AdminAreaAdmins: React.FC = () => {
                                  {/* Password Fields */}
                                  <div className={styles.formGroup}>
                                      <label htmlFor="editPassword">New Password (leave blank to keep current)</label>
-                                     <input
-                                         type="password" id="editPassword" name="password"
-                                         value={editFormData.password ?? ''}
-                                         onChange={handleEditFormChange} autoComplete="new-password"
-                                     />
+                                     <input type="password" id="editPassword" name="password" value={editFormData.password ?? ''} onChange={handleEditFormChange} autoComplete="new-password" />
                                  </div>
                                  <div className={styles.formGroup}>
                                      <label htmlFor="editConfirmPassword">Confirm New Password</label>
-                                     <input
-                                         type="password" id="editConfirmPassword" name="confirmPassword"
-                                         value={editFormData.confirmPassword ?? ''}
-                                         onChange={handleEditFormChange} autoComplete="new-password"
-                                     />
+                                     <input type="password" id="editConfirmPassword" name="confirmPassword" value={editFormData.confirmPassword ?? ''} onChange={handleEditFormChange} autoComplete="new-password" />
                                  </div>
 
                                  {/* Area Assignment Select */}
@@ -392,7 +432,7 @@ const AdminAreaAdmins: React.FC = () => {
                                          onChange={handleEditAreaSelectChange}
                                          isLoading={areasLoading} isDisabled={areasLoading || !!areasError}
                                          placeholder="Select areas..." closeMenuOnSelect={false}
-                                         styles={selectStyles}
+                                         styles={selectStyles} // Use multi-select styles
                                      />
                                  </div>
                              </div>
@@ -403,8 +443,8 @@ const AdminAreaAdmins: React.FC = () => {
                                  <button type="button" className={styles.cancelButton} onClick={handleEditModalClose} disabled={isUpdating}> Cancel </button>
                              </div>
                          </form>
-                    </div>
-                </div>
+                     </div>
+                 </div>
             )}
             {/* End Edit Modal */}
         </div>
@@ -412,3 +452,4 @@ const AdminAreaAdmins: React.FC = () => {
 };
 
 export default AdminAreaAdmins;
+

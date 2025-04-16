@@ -1,7 +1,10 @@
-// frontend/src/pages/area-admin/AreaAdminMyMembers.tsx (Final Code)
+// frontend/src/pages/area-admin/AreaAdminMyMembers.tsx (2x2 Filter Layout - Final)
+// No changes needed in this file from the previous version with the Payment Status filter.
+// The layout fix is handled entirely by the corrected CSS.
 import React, { useState, useEffect, FormEvent, useMemo, ChangeEvent } from 'react';
 import {
-    getMembers, MemberData // Ensure MemberData includes 'area: { id: string, name: string } | null' and 'areaId: string'
+    // ** IMPORTANT: Ensure MemberData interface includes isCurrentMonthPaid?: boolean; **
+    getMembers, MemberData
 } from '../../services/memberService'; // Verify path
 import {
     recordPayment, RecordPaymentData, PaymentData
@@ -15,6 +18,15 @@ interface Area {
     name: string;
 }
 
+// ** Add isCurrentMonthPaid to MemberData if not defined in service file **
+// interface MemberData {
+//   // ... other existing fields
+//   area?: { id: string; name: string; } | null;
+//   areaId?: string;
+//   isCurrentMonthPaid?: boolean; // <-- Assumed field from backend
+// }
+
+
 const AreaAdminMyMembers: React.FC = () => {
     // --- State Variables ---
     const [myMembersList, setMyMembersList] = useState<MemberData[]>([]);
@@ -23,6 +35,8 @@ const AreaAdminMyMembers: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [assignedAreas, setAssignedAreas] = useState<Area[]>([]);
     const [selectedAreaFilter, setSelectedAreaFilter] = useState<string>('');
+    // State for Payment Status Filter
+    const [paymentStatusFilter, setPaymentStatusFilter] = useState<'all' | 'paid' | 'due'>('all');
 
 
     // Payment Modal State
@@ -43,7 +57,7 @@ const AreaAdminMyMembers: React.FC = () => {
         setIsLoading(true);
         setFetchError(null);
         try {
-            // Assumes getMembers fetches members with the 'area' object included
+            // ** Assumes getMembers now fetches members including 'isCurrentMonthPaid' boolean **
             const data = await getMembers();
             setMyMembersList(data ?? []);
         } catch (error: any) { setFetchError(error.message || 'Failed to load members'); }
@@ -62,18 +76,16 @@ const AreaAdminMyMembers: React.FC = () => {
             myMembersList.forEach(member => {
                 const areaId = member.area?.id;
                 const areaName = member.area?.name;
-                // Add area only if it has both id and name and is not already added
                 if (areaId && areaName && !uniqueAreas.has(areaId)) {
                     uniqueAreas.set(areaId, { id: areaId, name: areaName });
                 }
             });
-            // Convert map values back to an array and sort alphabetically by name
             const sortedAreas = Array.from(uniqueAreas.values()).sort((a, b) => a.name.localeCompare(b.name));
             setAssignedAreas(sortedAreas);
         } else {
-            setAssignedAreas([]); // Clear if no members or members have no areas
+            setAssignedAreas([]);
         }
-    }, [myMembersList]); // Re-run whenever the member list changes
+    }, [myMembersList]);
 
 
     // --- Payment Modal Logic ---
@@ -132,15 +144,25 @@ const AreaAdminMyMembers: React.FC = () => {
         try {
             await Promise.all(paymentPromises);
             setPaymentSuccess(`${numMonths} month(s) payment recorded successfully!`);
+            fetchMyMembers(); // Refresh member list to update status
             setTimeout(() => { handleClosePaymentModal(); }, 2500);
         } catch (error: any) { setPaymentError(error.message || `Failed to record one or more payments.`); }
         finally { setIsSubmittingPayment(false); }
     };
 
 
-    // --- Filter members based on search query AND selected area ---
+    // --- Filter members (Search, Area, Payment Status) ---
     const filteredMembers = useMemo(() => {
         let members = myMembersList;
+
+        // 1. Filter by Payment Status
+        if (paymentStatusFilter === 'paid') {
+            members = members.filter(member => member.isCurrentMonthPaid === true);
+        } else if (paymentStatusFilter === 'due') {
+            members = members.filter(member => !member.isCurrentMonthPaid);
+        }
+
+        // 2. Filter by Search Query
         if (searchQuery && searchQuery.trim() !== '') {
             const lowerCaseQuery = searchQuery.toLowerCase();
             members = members.filter(member =>
@@ -149,11 +171,14 @@ const AreaAdminMyMembers: React.FC = () => {
                 (member.area?.name ?? '').toLowerCase().includes(lowerCaseQuery)
             );
         }
+
+        // 3. Filter by Selected Area
         if (selectedAreaFilter !== '') {
             members = members.filter(member => member.areaId === selectedAreaFilter);
         }
+
         return members;
-    }, [myMembersList, searchQuery, selectedAreaFilter]);
+    }, [myMembersList, searchQuery, selectedAreaFilter, paymentStatusFilter]);
 
 
     // --- Component Return (JSX) ---
@@ -161,83 +186,98 @@ const AreaAdminMyMembers: React.FC = () => {
         <div className={styles.container}>
             <h2>My Assigned Members</h2>
 
-             {/* --- Controls Bar (Search Left, Filter Right) --- */}
-             <div className={styles.controlsContainer}>
-                {/* Search Bar */}
-                <div className={styles.searchContainer}>
-                    <FaSearch className={styles.searchIcon} />
-                    <input
-                        type="search"
-                        placeholder="Search members..."
-                        value={searchQuery}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                        className={styles.searchInput}
-                    />
-                </div>
+             {/* Wrapper for all controls - Uses flex-direction: column */}
+             <div className={styles.controlsWrapper}>
 
-                {/* Area Filter Dropdown */}
-                <div className={styles.filterContainer}>
-                    <label htmlFor="areaFilter" className={styles.filterLabel}>Area:</label>
-                    <select
-                        id="areaFilter"
-                        name="areaFilter"
-                        value={selectedAreaFilter}
-                        onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedAreaFilter(e.target.value)}
-                        className={styles.filterSelect}
-                        // ** RESTORED original disabled condition **
-                        disabled={isLoading || assignedAreas.length === 0}
-                        title="Filter members by area"
-                    >
-                        <option value="">All My Areas</option>
-                        {assignedAreas.map(area => (
-                            <option key={area.id} value={area.id}>
-                                {area.name}
-                            </option>
-                        ))}
-                    </select>
+                {/* Top Row: Search | Area Filter */}
+                {/* This container uses flex-direction: row */}
+                <div className={styles.controlsContainer}>
+                    {/* Search Bar Container (gets flex: 1 from CSS) */}
+                    <div className={styles.searchContainer}>
+                        <FaSearch className={styles.searchIcon} />
+                        <input type="search" placeholder="Search members..." value={searchQuery} onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)} className={styles.searchInput} />
+                    </div>
+
+                    {/* Area Filter Container (gets flex: 1 from CSS) */}
+                    <div className={styles.filterContainer}>
+                        <label htmlFor="areaFilter" className={styles.filterLabel}>Area:</label>
+                        <select id="areaFilter" name="areaFilter" value={selectedAreaFilter} onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedAreaFilter(e.target.value)} className={styles.filterSelect} disabled={isLoading || assignedAreas.length === 0} title="Filter members by area">
+                            <option value="">All My Areas</option>
+                            {assignedAreas.map(area => (<option key={area.id} value={area.id}>{area.name}</option>))}
+                        </select>
+                    </div>
                 </div>
-                {/* --- End Filter --- */}
+                {/* End Top Row */}
+
+                {/* Bottom Row: Payment Status Filter | Spacer */}
+                 {/* This container also uses flex-direction: row */}
+                <div className={styles.controlsContainer}>
+                     {/* Payment Status Filter Container (gets flex: 1 from CSS) */}
+                     <div className={styles.filterContainer}>
+                         <label htmlFor="paymentStatusFilter" className={styles.filterLabel}>Payment Status:</label>
+                         <select
+                             id="paymentStatusFilter"
+                             name="paymentStatusFilter"
+                             value={paymentStatusFilter}
+                             onChange={(e: ChangeEvent<HTMLSelectElement>) => setPaymentStatusFilter(e.target.value as 'all' | 'paid' | 'due')}
+                             className={styles.filterSelect} // Reuse class
+                             disabled={isLoading}
+                             title="Filter members by current month payment status"
+                         >
+                             <option value="all">Show All</option>
+                             <option value="paid">Paid (Current Month)</option>
+                             <option value="due">Due (Current Month)</option>
+                         </select>
+                     </div>
+                     {/* Empty Spacer div (gets flex: 1 from CSS) */}
+                     {/* This div ensures the Payment Status filter only takes up half the width */}
+                     <div style={{ flex: 1 }}></div>
+
+                </div>
+                 {/* End Bottom Row */}
+
             </div>
-            {/* --- End Controls Bar --- */}
+            {/* End Controls Wrapper */}
 
-            {/* --- Removed Temporary Debug Info Box --- */}
 
             {/* Display Members List */}
-            {/* CSS Suggestion for Vertical Alignment: */}
-            {/* .table th, .table td { vertical-align: middle; } */}
-            {/* .table th:nth-child(5), .table td:nth-child(5) { text-align: center; } */}
-            {/* .table th:last-child, .table td:last-child { text-align: center; } */}
+            {/* CSS rules for table alignment should be in the CSS file */}
             <div className={styles.listSection}>
                  <h3>
                      Members List
-                     {selectedAreaFilter && assignedAreas.find(a => a.id === selectedAreaFilter)
-                         ? ` (Filtered by Area: ${assignedAreas.find(a => a.id === selectedAreaFilter)?.name})`
-                         : ''}
+                     {/* Filter status display */}
+                     {selectedAreaFilter && assignedAreas.find(a => a.id === selectedAreaFilter) ? ` (Area: ${assignedAreas.find(a => a.id === selectedAreaFilter)?.name})` : ''}
+                     {paymentStatusFilter !== 'all' ? ` (Status: ${paymentStatusFilter === 'paid' ? 'Paid' : 'Due'})`: ''}
                  </h3>
                 {isLoading && <p className={styles.loadingText}>Loading members...</p>}
                 {fetchError && <p className={styles.errorMessage}>{fetchError}</p>}
                 {!isLoading && !fetchError && filteredMembers.length === 0 && (
                     <p className={styles.noDataText}>
-                        {searchQuery || selectedAreaFilter ? 'No members found matching filters.' : 'You currently have no members assigned.'}
+                        {searchQuery || selectedAreaFilter || paymentStatusFilter !== 'all'
+                            ? 'No members found matching filters.'
+                            : 'You currently have no members assigned.'}
                     </p>
                 )}
                 {!isLoading && !fetchError && filteredMembers.length > 0 && (
                     <div className={styles.tableContainer}>
                         <table className={styles.table}>
-                            <thead>
-                                <tr>
-                                    <th>ID</th><th>Name</th><th>Phone</th><th>Area</th>
-                                    <th>Monthly Amount</th><th>Created At</th><th>Record Payment</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Area</th><th>Monthly Amount</th><th>Created At</th><th>Record Payment</th></tr></thead>
                             <tbody>
                                 {filteredMembers.map((member) => (
                                     <tr key={member.id}>
                                         <td>{member.id}</td><td>{member.name}</td><td>{member.phone}</td>
-                                        <td>{member.area?.name ?? 'N/A'}</td><td>{member.monthlyAmount}</td>
+                                        <td>{member.area?.name ?? 'N/A'}</td>
+                                        <td className={styles.amountCell}>{member.monthlyAmount}</td>
                                         <td>{new Date(member.createdAt).toLocaleDateString()}</td>
-                                        <td>
-                                            <button onClick={() => handleOpenPaymentModal(member)} className={`${styles.actionButton} ${styles.recordButton}`} title="Record Payment" >
+                                        <td className={styles.actionCell}>
+                                            <button
+                                                onClick={() => handleOpenPaymentModal(member)}
+                                                className={`
+                                                    ${styles.actionButton} ${styles.recordButton}
+                                                    ${member.isCurrentMonthPaid ? styles.paidButton : styles.dueButton}
+                                                `}
+                                                title={member.isCurrentMonthPaid ? `Paid (${new Date().toLocaleString('default', { month: 'long' })})` : "Record Payment"}
+                                            >
                                                 <FaMoneyCheckAlt />
                                             </button>
                                         </td>
@@ -253,7 +293,7 @@ const AreaAdminMyMembers: React.FC = () => {
             {isPaymentModalOpen && selectedMember && (
                 <div className={styles.modalBackdrop}>
                     <div className={styles.modalContent}>
-                        {/* ... (keep existing modal content) ... */}
+                         {/* ... existing modal content ... */}
                          <h3>Record Payment for {selectedMember.name}</h3>
                          <p>Monthly Amount Due: <strong>{selectedMember.monthlyAmount}</strong></p>
                          <form onSubmit={handlePaymentSubmit} className={styles.paymentForm}>

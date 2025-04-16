@@ -1,445 +1,274 @@
-/* frontend/src/pages/admin/AdminMembers.module.css */
-/* (You can copy styles from AdminAreaAdmins.module.css as they are very similar) */
+/* frontend/src/pages/admin/AdminMembers.module.css (Final & Cleaned) */
 
+/* --- Base Container & Keyframes --- */
 .container {
-    padding: 1.5rem;
-    animation: fadeIn 0.5s ease-out;
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  .container h2 {
-    margin-bottom: 1.5rem;
-    color: #111827;
-    font-size: 1.8rem;
-    font-weight: 700;
-  }
-  
-  .container h3 {
-    margin-bottom: 1rem;
-    color: #374151;
-    border-bottom: 1px solid #e5e7eb;
-    padding-bottom: 0.5rem;
-    font-size: 1.25rem;
-    font-weight: 600;
-  }
-  
-  /* --- Form Styling --- */
-  .addForm {
-    background-color: white;
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    margin-bottom: 2.5rem;
-  }
-  
-  .formGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.25rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .formGroup label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    font-size: 0.9rem;
-    color: #374151;
-  }
-  
-  /* --- Input Styling --- */
-  .formGroup input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 1rem;
-    box-sizing: border-box;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    background-color: #f9fafb;
-    color: #1f2937;
-  }
-  .formGroup input:focus {
-    outline: none;
-    border-color: #4f46e5;
-    background-color: white;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
-  }
-  
-  /* --- Button Styling (General) --- */
-   .submitButton, .cancelButton, .actionButton {
-      padding: 0.7rem 1.2rem;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease-in-out;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-  }
-  .submitButton:disabled, .actionButton:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-  }
-  
-  /* Add Member & Save Changes Button */
-  .submitButton {
-    background-color: #4f46e5; /* Indigo */
-    color: white;
-    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
-  }
-  .submitButton:hover:not(:disabled) {
-    background-color: #4338ca; /* Darker Indigo */
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3);
-  }
-  
-   /* Cancel Button (Used in Modal) */
-  .cancelButton {
-      background-color: #e5e7eb; /* Light gray */
-      color: #374151;
-      border: 1px solid #d1d5db;
-  }
-  .cancelButton:hover {
-      background-color: #d1d5db; /* Darker Gray */
-      border-color: #9ca3af;
-  }
-  
-  
-  /* Action Buttons (Edit/Delete) */
-  .actionButton {
-      padding: 0.5rem 0.6rem; /* Adjust padding for icons */
-      margin-right: 0.5rem;
-      font-size: 1rem; /* Icon size */
-      line-height: 1; /* Prevent extra height */
-  }
-  .actionButton:hover {
-      transform: scale(1.1); /* Scale effect on hover */
-  }
-  .editButton {
-    background-color: #f59e0b; /* Amber */
-    color: white;
-  }
-  .deleteButton {
-    background-color: #ef4444; /* Red */
-    color: white;
-  }
-  
-  /* --- List Section & Table Styling --- */
-  .listSection {
-    margin-top: 2.5rem;
-  }
-  .tableContainer {
-    overflow-x: auto;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  }
-  .table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 750px; /* Adjusted min-width for member table */
-  }
-  .table th, .table td {
-    border-bottom: 1px solid #e5e7eb;
-    padding: 0.9rem 1.1rem; /* Adjust padding */
-    text-align: left;
-    font-size: 0.9rem;
-    vertical-align: middle;
-  }
-  .table th {
-    background-color: #f9fafb;
-    font-weight: 600;
-    color: #374151;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-   .table tbody tr:hover {
-     background-color: #f0fdf4; /* Subtle green hover */
-  }
-  .table td:last-child { /* Actions column */
-      white-space: nowrap;
-  }
-  
-   /* Loading / No Data Text */
-  .loadingText, .noDataText {
-      padding: 2rem;
-      text-align: center;
-      color: #6b7280;
-      font-style: italic;
-  }
-  
-   /* --- Message Styling --- */
-  .errorMessage, .successMessage {
-    padding: 0.9rem 1rem;
-    border-radius: 6px;
-    margin: 1rem 0;
-    font-size: 0.9rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .errorMessage {
-    color: #991b1b; background-color: #fee2e2; border: 1px solid #fca5a5;
-  }
-  .successMessage {
-     color: #14532d; background-color: #dcfce7; border: 1px solid #86efac;
-  }
-  
-  
-  /* --- Modal Styling --- */
-  .modalBackdrop {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background-color: rgba(0, 0, 0, 0.6);
-      display: flex; justify-content: center; align-items: center;
-      z-index: 1050;
-      animation: fadeIn 0.3s ease-out;
-  }
-  .modalContent {
-      background-color: white; padding: 2.5rem; border-radius: 10px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-      width: 90%; max-width: 700px; /* Wider modal for member form */
-      max-height: 90vh;
-      overflow-y: auto;
-      animation: slideIn 0.3s ease-out;
-  }
-  @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-  
-  .modalContent h3 { margin-top: 0; margin-bottom: 1.8rem; color: #111827; font-size: 1.5rem;}
-  .modalActions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; }
-  /* Add to frontend/src/pages/admin/AdminMembers.module.css or similar */
+  padding: 1.5rem;
+  animation: fadeIn 0.5s ease-out;
+}
 
-/* Basic Select Styling (if needed) */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Headings --- */
+.container h2 {
+  margin-bottom: 1.5rem;
+  color: #111827; /* Dark Gray */
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.container h3 {
+  margin-bottom: 1rem;
+  color: #374151; /* Medium Gray */
+  border-bottom: 1px solid #e5e7eb; /* Light Gray Border */
+  padding-bottom: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* --- Add Member Form Styling --- */
+.addForm {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  margin-bottom: 2.5rem;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+/* General inputs/selects within .formGroup (used in Add/Edit forms) */
+.formGroup input,
 .formGroup select {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid #d1d5db; /* Gray-300 */
   border-radius: 6px;
-  font-size: 1rem;
-  box-sizing: border-box;
-  background-color: #f9fafb;
-  color: #1f2937;
-  cursor: pointer;
-}
-.formGroup select:focus {
-  outline: none;
-  border-color: #4f46e5;
-  background-color: white;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
-}
-
-.paymentForm { /* Add specific styles for payment form layout if needed */
-  /* Example styles */
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-/* --- Search Bar Styles (Should be IN your .module.css file) --- */
-.searchContainer {
-  margin-bottom: 1.5rem;
-  max-width: 400px;
-  position: relative;
-}
-.searchInput {
-  width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem; /* Left padding for icon */
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
   font-size: 1rem;
   box-sizing: border-box;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  background-color: rgb(2, 2, 2);
+  background-color: #f9fafb; /* Gray-50 */
+  color: #1f2937; /* Gray-800 */
 }
-.searchInput:focus {
+.formGroup input:focus,
+.formGroup select:focus {
   outline: none;
-  border-color: #4f46e5;
+  border-color: #4f46e5; /* Indigo-600 */
+  background-color: white;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
 }
-.searchInput::placeholder { color: #d2d4d8; font-style: italic; }
-.searchIcon {
-  position: absolute; left: 0.8rem; top: 50%;
-  transform: translateY(-50%); color: #9ca3af; font-size: 1rem;
-  pointer-events: none;
-}
-/* Add/Verify in your CSS Module */
+.formGroup select { cursor: pointer; }
 
-/* --- Filter Controls Styles --- */
-.controlsContainer { /* Optional: New container for layout */
+.readOnlyInput {
+    background-color: #e9ecef; /* Gray-200 */
+    cursor: not-allowed;
+    color: #4b5563; /* Gray-600 */
+}
+
+
+/* --- Filter Controls Layout (Search | Filter Area Side-by-Side) --- */
+.controlsContainer {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  align-items: flex-end; /* Align items to bottom */
-  margin-bottom: 1.5rem;
+  align-items: stretch; /* Make items have the same height */
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  gap: 1rem; /* Space between search and filter */
+  margin-bottom: 1.5rem; /* Space below controls */
 }
 
+/* Make search and filter containers share space equally */
+.searchContainer,
 .filterContainer {
+  flex: 1; /* Distribute space equally */
+  min-width: 200px; /* Prevent excessive squishing */
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem; /* Space between filter inputs */
-  padding: 0.8rem 1rem; /* Adjust padding */
-  background-color: #f9fafb;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  flex-grow: 1; /* Allow filters to take space */
+  flex-direction: column; /* Stack label and input/select */
+  justify-content: flex-end; /* Align input/select to bottom */
 }
 
-.filterContainer .formGroup {
-  margin-bottom: 0;
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 150px; /* Adjust base size */
-}
-.filterContainer .formGroup label {
-  margin-bottom: 0.4rem; font-size: 0.8rem; color: #4b5563; font-weight: 500;
-}
-.filterContainer select,
-.filterContainer input[type="number"] {
- width: 100%; padding: 0.6rem 0.8rem; border: 1px solid #d1d5db;
- border-radius: 6px; font-size: 0.95rem; box-sizing: border-box; background-color: white;
-}
-.filterContainer select { cursor: pointer; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.6-3.6%205.4-7.9%205.4-12.9%200-5-1.9-9.2-5.5-12.7z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right .7em top 50%; background-size: .65em auto; padding-right: 2.5em; }
-.filterContainer select:focus,
-.filterContainer input[type="number"]:focus {
-  outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
-}
-.yearFilterGroup { display: flex; align-items: center; gap: 0.5rem; }
-.clearButton {
-  margin-left: 0.5rem; /* Or use gap in parent */
-  padding: 0.2rem 0.5rem; font-size: 0.75rem; color: #6b7280; background: none;
-  border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer; flex-shrink: 0;
-}
-.clearButton:hover { background-color: #e5e7eb; }
-
-
-/* --- Search Bar Styles --- */
-/* --- Search Input Styling --- */
-.searchInput {
-  /* --- Appearance --- */
-  background-color: #f0f2f5; /* Light grey background */
-  color: #000000;     /* Black text color */
-  border: 1px solid #d9d9d9; /* Softer border */
-  border-radius: 6px;  /* Slightly more rounded corners */
-  padding: 0.6rem 0.8rem 0.6rem 2.7rem; /* Left padding for icon */
-  font-size: 0.95rem;
-  height: 40px;        /* Control height */
-  box-sizing: border-box;
-  /* --- Animation --- */
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
-  width: 100%; /* Ensure it fills its container */
-}
-
-/* Placeholder Text Styling */
-.searchInput::placeholder {
-  color: #555;
-  opacity: 0.8;
-}
-
-/* Hover State */
-.searchInput:hover {
-  border-color: #a0a0a0;
-}
-
-/* Focus State (Animation/Highlight) */
-.searchInput:focus {
-  outline: none;
-  border-color: #1890ff;
-  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.2); /* Glow effect */
-  background-color: #ffffff; /* White background on focus */
-}
-
-/* Search Icon Styling */
-.searchIcon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #333; /* Darker icon */
-  font-size: 1rem;
-  z-index: 2; /* Above input background */
-}
-
-
-/* --- Filter Dropdown Styling --- */
+/* Label specifically within filter controls */
 .filterLabel {
-  flex-shrink: 0;
-  white-space: nowrap;
-  font-weight: 500;
-  color: #000000; /* Black text color */
+    margin-bottom: 0.3rem;
+    display: block;
+    flex-shrink: 0;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+/* --- Search Input & Filter Select Specific Styles (Used in Controls Bar) --- */
+.searchInput,
+.filterSelect {
+  width: 100%; /* Fill their container */
+  height: 40px;
+  box-sizing: border-box;
+  background-color: #f0f2f5; /* Consistent light background */
+  color: #000000; /* Consistent black text */
+  border: 1px solid #d9d9d9; /* Consistent border */
+  border-radius: 6px; /* Consistent radius */
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+  padding-right: 0.8rem;
+  font-size: 0.95rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.searchInput {
+  padding-left: 2.8rem; /* Space for icon */
 }
 
 .filterSelect {
-  /* --- Appearance --- */
-  background-color: #f0f2f5; /* Light grey background - MATCH INPUT */
-  color: #000000;     /* Black text color */
-  border: 1px solid #d9d9d9;
-  border-radius: 6px;
-  padding: 0.6rem 0.8rem;
-  font-size: 0.95rem;
-  height: 40px;        /* Match input height */
-  box-sizing: border-box;
+  padding-left: 0.8rem; /* Standard left padding */
   cursor: pointer;
-  /* --- Custom Arrow --- */
-  appearance: none;
+  appearance: none; /* Remove default arrow */
   background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%20fill%3D%22%23333333%22%3E%3Cpath%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
   background-repeat: no-repeat;
   background-position: right 0.9rem center;
   background-size: 0.7em auto;
   padding-right: 2.8rem; /* Space for the arrow */
-  /* --- Animation --- */
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
-  width: 100%; /* Ensure it fills its container */
 }
 
-/* Hover State */
-.filterSelect:hover {
-  border-color: #a0a0a0;
-}
-
-/* Focus State (Animation/Highlight) */
-.filterSelect:focus {
-  outline: none;
-  border-color: #1890ff;
+.searchInput::placeholder { color: #555; opacity: 0.8; }
+.searchInput:hover, .filterSelect:hover { border-color: #a0a0a0; }
+.searchInput:focus, .filterSelect:focus {
+  outline: none; border-color: #1890ff; /* Consistent focus blue */
   box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.2);
   background-color: #ffffff;
 }
-
-/* Disabled State */
 .filterSelect:disabled {
-    background-color: #e9ecef;
-    cursor: not-allowed;
-    opacity: 0.6;
-    border-color: #e0e0e0;
+    background-color: #e9ecef; cursor: not-allowed;
+    opacity: 0.6; border-color: #e0e0e0;
 }
 
-/* --- Container Layout Rules (Ensure these are also present for side-by-side equal width) --- */
-/* You might already have these from previous steps */
+.searchContainer { position: relative; /* Keep for icon */ }
+.searchIcon {
+  position: absolute; left: 0.9rem; top: 50%; /* Adjusted position */
+  transform: translateY(-50%); color: #333;
+  font-size: 1rem; z-index: 2; pointer-events: none;
+}
+.loadingTextSmall, .errorMessageSmall { /* Styles for filter loading/error */
+    font-size: 0.8rem; margin-top: 0.2rem; color: #6c757d;
+    padding-left: 0.1rem;
+}
+.errorMessageSmall { color: #dc3545; }
 
-/*
-.controlsContainer {
-  display: flex;
-  align-items: stretch;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+
+/* --- Button Styling (General) --- */
+.submitButton, .cancelButton, .actionButton {
+    padding: 0.7rem 1.2rem; border: none; border-radius: 6px;
+    font-size: 0.95rem; font-weight: 600; cursor: pointer;
+    transition: all 0.2s ease-in-out; display: inline-flex;
+    align-items: center; justify-content: center; gap: 0.4rem;
+}
+.submitButton:disabled, .actionButton:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.submitButton { background-color: #4f46e5; color: white; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2); }
+.submitButton:hover:not(:disabled) { background-color: #4338ca; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3); }
+.cancelButton { background-color: #e5e7eb; color: #374151; border: 1px solid #d1d5db; }
+.cancelButton:hover { background-color: #d1d5db; border-color: #9ca3af; }
+
+.actionButton { padding: 0.5rem 0.6rem; margin-right: 0.5rem; font-size: 1rem; line-height: 1; vertical-align: middle; }
+.actionButton:last-child { margin-right: 0; }
+.actionButton:hover { transform: scale(1.1); }
+.editButton { background-color: #f59e0b; color: white; }
+.deleteButton { background-color: #ef4444; color: white; }
+.recordButton { vertical-align: middle; } /* Base for payment button */
+
+/* --- Payment Status Button Styles (If used on this page) --- */
+.paidButton { background-color: #10b981 !important; color: white !important; border: 1px solid #059669; }
+.paidButton:hover { background-color: #059669 !important; transform: scale(1.1); }
+.dueButton { background-color: #ef4444 !important; color: white !important; border: 1px solid #dc2626; }
+.dueButton:hover { background-color: #dc2626 !important; transform: scale(1.1); }
+
+
+/* --- List Section & Table Styling --- */
+.listSection { margin-top: 2.5rem; }
+.tableContainer { overflow-x: auto; background-color: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+.table { width: 100%; border-collapse: collapse; min-width: 750px; } /* Adjusted min-width */
+
+.table th, .table td {
+  border-bottom: 1px solid #e5e7eb; padding: 0.9rem 1.1rem; /* Adjusted padding */
+  text-align: left; font-size: 0.9rem;
+  vertical-align: middle; /* Vertical centering */
+}
+.table th {
+  background-color: #f9fafb; font-weight: 600; color: #374151;
+  font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.table tbody tr:hover { background-color: #f0fdf4; }
+.table td:last-child { white-space: nowrap; }
+
+/* Centering specific columns (Adjust for AdminMembers table) */
+/* Example: Amount (5th), Actions (last) */
+.table th:nth-child(5), .table td:nth-child(5), /* Amount */
+.table th:last-child, .table td:last-child { /* Actions */
+  text-align: center;
+}
+/* Optional classes for cells */
+.amountCell { text-align: center; }
+.actionCell { text-align: center; }
+
+
+/* Loading / No Data Text */
+.loadingText, .noDataText { padding: 2rem; text-align: center; color: #6b7280; font-style: italic; }
+
+/* --- Message Styling --- */
+.errorMessage, .successMessage {
+  padding: 0.9rem 1rem; border-radius: 6px; margin: 1rem 0;
+  font-size: 0.9rem; font-weight: 500; display: flex;
+  align-items: center; gap: 0.5rem;
+}
+.errorMessage { color: #991b1b; background-color: #fee2e2; border: 1px solid #fca5a5; }
+.successMessage { color: #14532d; background-color: #dcfce7; border: 1px solid #86efac; }
+
+/* --- Modal Styling --- */
+.modalBackdrop {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); display: flex;
+    justify-content: center; align-items: center; z-index: 1050;
+    animation: fadeIn 0.3s ease-out;
+}
+.modalContent {
+    background-color: white; padding: 2.5rem; border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); width: 90%;
+    max-width: 700px; /* Wider modal for member form */
+    max-height: 90vh; overflow-y: auto;
+    animation: slideIn 0.3s ease-out;
+}
+@keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modalContent h3 { margin-top: 0; margin-bottom: 1.8rem; color: #111827; font-size: 1.5rem;}
+.modalActions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; }
+.paymentForm .formGrid { /* Specific grid for payment modal */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
 }
 
-.searchContainer,
-.filterContainer {
-  flex: 1; // Distribute space equally
-  display: flex;
-  align-items: center;
-}
 
-.filterContainer {
-  gap: 0.6rem; // Space between label and select
+/* --- Responsive Stacking for Controls --- */
+@media (max-width: 768px) {
+  .controlsContainer {
+    flex-direction: column; /* Stack items within each row */
+    align-items: stretch;
+    gap: 1rem;
+  }
+  /* Target direct div children */
+  .controlsContainer > div {
+      flex: none !important; /* Remove flex sizing when stacked */
+      min-width: unset !important;
+  }
 }
-*/
 
