@@ -1,4 +1,4 @@
-// frontend/src/App.tsx (MODIFIED)
+// frontend/src/App.tsx (Final - No Changes Needed)
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
@@ -14,7 +14,7 @@ import AreaAdminDashboardPage from './pages/AreaAdminDashboardPage';
 import AdminOverview from './pages/admin/AdminOverview';
 import AdminMembers from './pages/admin/AdminMembers';
 import AdminAreaAdmins from './pages/admin/AdminAreaAdmins';
-import AdminPayments from './pages/admin/AdminPayments';
+import AdminPayments from './pages/admin/AdminPayments'; // <-- Import is present
 import ManageAreas from './pages/admin/ManageAreas';
 
 // --- Area Admin Section Components ---
@@ -42,10 +42,8 @@ function App() {
                     <Route index element={<AdminOverview />} />
                     <Route path="members" element={<AdminMembers />} />
                     <Route path="area-admins" element={<AdminAreaAdmins />} />
-                    <Route path="payments" element={<AdminPayments />} />
-                    {/* --- ** 2. Add Manage Areas Route ** --- */}
+                    <Route path="payments" element={<AdminPayments />} /> {/* <-- Route is correctly defined */}
                     <Route path="areas" element={<ManageAreas />} />
-                    {/* --- End Add Manage Areas Route --- */}
                 </Route>
             </Route>
 

@@ -109,7 +109,7 @@
     background-size: 0.7em auto;
     padding-right: 2.8rem; /* Space for the arrow */
   }
-
+a
   
   .searchInput::placeholder { color: #555; opacity: 0.8; }
   .searchInput:hover,
