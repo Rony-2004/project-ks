@@ -4,59 +4,67 @@
   }
   .overviewContainer h2 {
      margin-bottom: 1.5rem;
-     color: #111827;
+     color: #111827; /* Dark gray text */
      font-size: 1.8rem;
      font-weight: 700;
   }
-  
+
   .statsGrid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      margin-top: 1rem;
+     display: grid;
+     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Responsive grid */
+     gap: 1.5rem; /* Space between cards */
+     margin-top: 1rem;
   }
-  
+
   .statCard {
-      background-color: white;
-      padding: 1.5rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.07);
-      text-align: center;
-      border-left: 5px solid #4f46e5; /* Accent color */
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+     background-color: white;
+     padding: 1.5rem;
+     border-radius: 8px;
+     box-shadow: 0 4px 10px rgba(0,0,0,0.07);
+     text-align: center;
+     border-left: 5px solid #4f46e5; /* Accent color (Indigo) */
+     transition: transform 0.2s ease, box-shadow 0.2s ease;
+     cursor: pointer; /* Make it look clickable */
+     height: 100%; /* Ensure cards in a row have same height */
+     display: flex; /* Added for better vertical centering if needed */
+     flex-direction: column; /* Added */
+     justify-content: center; /* Added */
   }
   .statCard:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+     transform: translateY(-3px);
+     box-shadow: 0 6px 15px rgba(0,0,0,0.1);
   }
-  
+
   .statCard h4 {
-      margin: 0 0 0.5rem 0;
-      font-size: 1rem;
-      color: #4b5563;
-      font-weight: 600;
+     margin: 0 0 0.5rem 0;
+     font-size: 1rem;
+     color: #4b5563; /* Medium-gray text */
+     font-weight: 600;
+     text-transform: uppercase; /* Added */
+     letter-spacing: 0.05em; /* Added */
   }
-  
+
   .statValue {
-      font-size: 2.2rem;
-      font-weight: 700;
-      color: #1f2937;
-      margin: 0;
+     font-size: 2.2rem;
+     font-weight: 700;
+     color: #1f2937; /* Darker gray text */
+     margin: 0;
+     line-height: 1.1; /* Adjust line height */
   }
-  
+
   .loadingText {
-      padding: 2rem;
-      text-align: center;
-      color: #6b7280;
-      font-style: italic;
+     padding: 2rem;
+     text-align: center;
+     color: #6b7280; /* Gray text */
+     font-style: italic;
   }
-  
+
   .errorMessage {
-      color: #991b1b;
-      background-color: #fee2e2;
-      border: 1px solid #fca5a5;
-      padding: 0.8rem;
-      border-radius: 6px;
-      margin-top: 1rem;
-      font-size: 0.9rem;
+     color: #991b1b; /* Dark red text */
+     background-color: #fee2e2; /* Light red background */
+     border: 1px solid #fca5a5; /* Red border */
+     padding: 0.8rem;
+     border-radius: 6px;
+     margin-top: 1rem;
+     font-size: 0.9rem;
   }
