@@ -126,3 +126,27 @@
     padding: 0.5rem;
 }
 .error { color: #ef4444; }
+/* Header.module.css */
+/* ... other styles ... */
+
+.logoutButton {
+    background: none;
+    border: none;
+    color: #fc1414; /* Or your header text color */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    margin-left: 15px;
+    border-radius: 4px;
+  }
+  
+  
+  .headerTitle {
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: #f10d0d; /* Or your desired color */
+      justify-content: center;
+      text-align: center;
+      display: flex;
+  }
