@@ -315,3 +315,31 @@
       min-width: unset !important;
   }
 }
+/* AdminMembers.module.css */
+
+/* ... other styles ... */
+
+.recordButton {
+  /* Your base style for this button */
+  margin-left: 5px; /* Example spacing */
+}
+
+.paidButton {
+  /* Style for when current month is paid */
+  background-color: #22c55e; /* Green */
+  color: white;
+  border-color: #16a34a;
+}
+.paidButton:hover {
+  background-color: #16a34a;
+}
+
+.dueButton {
+  /* Style for when current month is due */
+  background-color: #ef4444; /* Red */
+  color: white;
+  border-color: #dc2626;
+}
+.dueButton:hover {
+  background-color: #dc2626;
+}

@@ -1,6 +1,6 @@
 // src/components/profile/EditProfileModal.tsx
 import React, { useState, useEffect, FormEvent } from 'react';
-import { AdminProfileData, UpdateAdminProfileData, updateMyProfile } from '../../services/authService'; // Adjust path
+import { AdminProfileData, UpdateAdminProfileData, updateAdminProfile  } from '../../services/authService'; // Adjust path
 import styles from './EditProfileModal.module.css'; // Create this CSS file
 
 interface EditProfileModalProps {

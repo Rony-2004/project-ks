@@ -1,18 +1,18 @@
 // frontend/src/services/paymentService.ts
-// ** Added getPaymentsByMember function **
+// ** Added recordPaymentByAdmin function **
 
 import apiClient from '../utils/apiClient'; // Use our authenticated client
 
 // --- Interfaces ---
 
-// For RECORDING a new payment (Area Admin Form)
+// For RECORDING a new payment (Used by Area Admin and Admin forms)
 export interface RecordPaymentData {
     memberId: string;
     amountPaid: number | string; // Allow string from form
     paymentMethod: 'Cash' | 'Online';
-    paymentMonth: number | string; // Allow string from form
-    paymentYear: number | string; // Allow string from form
-    paymentDate?: string; // Optional date string (YYYY-MM-DD)
+    paymentMonth: number | string; // Allow string from form (Month the payment is FOR)
+    paymentYear: number | string; // Allow string from form (Year the payment is FOR)
+    paymentDate?: string; // Optional date string (Date payment RECEIVED YYYY-MM-DD)
 }
 
 // Base Payment data from DB
@@ -41,56 +41,53 @@ export interface PaymentDataForAreaAdmin extends PaymentBaseData {
 }
 
 
-// *** NEW *** Payment data structure for the MAIN ADMIN dashboard
+// Payment data structure for the MAIN ADMIN dashboard/modals
 // Includes Member (with Area) and RecordedBy (with Role) details
 export interface AdminPaymentData extends PaymentBaseData {
     member: {
         id: string;
         name: string;
-        // Ensure monthlyAmount is included if needed for other features (like green dot)
-        monthlyAmount?: number | null; // Make sure this matches backend if using green dot logic
+        monthlyAmount?: number | null; // Ensure backend sends this if needed
         areaId: string;
         area: {
             id: string;
             name: string;
-        } | null; // Area might be null if deleted? Handle defensively.
-    } | null; // Member might be null if deleted? Handle defensively.
+        } | null;
+    } | null;
     recordedBy: {
         id: string;
-        name: string | null; // Admin might not have a name field, adjust if needed
-        role: string;        // e.g., 'admin', 'areaAdmin'
-    } | null; // Recorder might be null? Handle defensively.
+        name: string | null;
+        role: string;
+    } | null;
 }
 
 
-// For UPDATING an existing payment (all fields optional)
-// This interface is used by both Admin and Area Admin forms/modals
+// For UPDATING an existing payment
 export interface UpdatePaymentData {
     amountPaid?: number | string;
     paymentMethod?: 'Cash' | 'Online';
     paymentMonth?: number | string;
     paymentYear?: number | string;
-    paymentDate?: string | null; // Allow YYYY-MM-DD or null/empty to potentially clear date? Check backend logic.
+    paymentDate?: string | null;
 }
 
 
 // --- Service Functions ---
 
-// RECORD Payment (Area Admin only)
+// RECORD Payment (Area Admin only - Uses POST /payments)
 export const recordPayment = async (data: RecordPaymentData): Promise<PaymentBaseData> => {
     const SERVICE_NAME = '[PaymentService recordPayment]';
     try {
-        console.log(`${SERVICE_NAME} Recording payment:`, data);
-        const payload = {
+        console.log(`${SERVICE_NAME} Recording payment (Area Admin):`, data);
+        const payload = { /* ... payload creation ... */
             ...data,
             amountPaid: Number(data.amountPaid) || 0,
             paymentMonth: Number(data.paymentMonth) || 0,
             paymentYear: Number(data.paymentYear) || 0,
         };
-        if (!payload.paymentDate || payload.paymentDate.trim() === '') {
-             delete payload.paymentDate;
-        }
+        if (!payload.paymentDate || payload.paymentDate.trim() === '') { delete payload.paymentDate; }
         if (payload.amountPaid <=0 || payload.paymentMonth <= 0 || payload.paymentYear <= 0) { throw new Error("Invalid amount, month, or year provided."); }
+        // Calls POST /api/payments
         const response = await apiClient.post<PaymentBaseData>('/payments', payload);
         console.log(`${SERVICE_NAME} Payment recorded response:`, response.data);
         return response.data;
@@ -99,6 +96,47 @@ export const recordPayment = async (data: RecordPaymentData): Promise<PaymentBas
         throw new Error(error.response?.data?.message || 'Failed to record payment.');
     }
 };
+
+// --- *** ADD THIS NEW FUNCTION for Admin Recording Payment *** ---
+// Note: Reuses RecordPaymentData interface, adjust if Admin sends different data
+export const recordPaymentByAdmin = async (data: RecordPaymentData): Promise<PaymentBaseData> => {
+    const SERVICE_NAME = '[PaymentService recordPaymentByAdmin]';
+    try {
+        console.log(`${SERVICE_NAME} Recording payment by Admin:`, data);
+
+        // Prepare payload (similar validation as recordPayment can be done)
+        const payload = {
+            ...data,
+            amountPaid: Number(data.amountPaid) || 0,
+            paymentMonth: Number(data.paymentMonth) || 0,
+            paymentYear: Number(data.paymentYear) || 0,
+        };
+         if (!payload.paymentDate || payload.paymentDate.trim() === '') { delete payload.paymentDate; } // Default date handled by backend if needed
+         // Basic validation
+         if (!payload.memberId || payload.amountPaid <=0 || payload.paymentMonth <= 0 || payload.paymentYear <= 0 || !payload.paymentMethod) {
+             throw new Error("Missing or invalid required fields for payment recording.");
+         }
+
+        // POST to the new backend route specifically for admin recording
+        // Assumes backend route is POST /api/payments/by-admin
+        const response = await apiClient.post<PaymentBaseData>('/payments/by-admin', payload);
+
+        console.log(`${SERVICE_NAME} Payment recorded by Admin response:`, response.data);
+        return response.data; // Return created payment data
+
+    } catch (error: any) {
+        console.error(`${SERVICE_NAME} Error recording payment by Admin:`, error.response?.data || error.message);
+        // Log full error for debugging
+         console.error(`${SERVICE_NAME} Full error object:`, error);
+         if (error.response) {
+            console.error(`${SERVICE_NAME} Error Response Status:`, error.response.status);
+            console.error(`${SERVICE_NAME} Error Response Data:`, error.response.data);
+        }
+        throw new Error(error.response?.data?.message || 'Failed to record payment as Admin.');
+    }
+};
+// --- *** END ADDED FUNCTION *** ---
+
 
 // GET Payments recorded BY the logged-in Area Admin
 export const getMyAreaPayments = async (): Promise<PaymentDataForAreaAdmin[]> => {
@@ -125,30 +163,26 @@ export const getAllPaymentsAdmin = async (): Promise<AdminPaymentData[]> => {
     } catch (error: any) {
         console.error(`${SERVICE_NAME} Error caught:`, error.response?.data || error.message);
         console.error(`${SERVICE_NAME} Full error object:`, error);
-        if (error.response) {
-            console.error(`${SERVICE_NAME} Error Response Status:`, error.response.status);
-            console.error(`${SERVICE_NAME} Error Response Data:`, error.response.data);
-        }
+        if (error.response) { console.error(`${SERVICE_NAME} Error Response Status:`, error.response.status); console.error(`${SERVICE_NAME} Error Response Data:`, error.response.data); }
         throw new Error(error.response?.data?.message || 'Failed to fetch all payment history.');
     }
 };
 
 
 // UPDATE a specific Payment record (Used by Admin and Area Admin)
-export const updatePayment = async (paymentId: string, data: UpdatePaymentData): Promise<PaymentBaseData> => { // Return PaymentBaseData
+export const updatePayment = async (paymentId: string, data: UpdatePaymentData): Promise<PaymentBaseData> => {
      const SERVICE_NAME = '[PaymentService updatePayment]';
      if (!paymentId) throw new Error('Payment ID is required for update.');
      try {
         console.log(`${SERVICE_NAME} Updating payment ID ${paymentId} with data:`, data);
         const payload: UpdatePaymentData = { ...data };
-        if (payload.amountPaid !== undefined) { const numAmount = Number(payload.amountPaid); if (isNaN(numAmount) || numAmount <= 0) throw new Error('Invalid amount provided for update.'); payload.amountPaid = numAmount; } else { delete payload.amountPaid; }
+        if (payload.amountPaid !== undefined) { const numAmount = Number(payload.amountPaid); if (isNaN(numAmount) || numAmount <= 0) throw new Error('Invalid amount.'); payload.amountPaid = numAmount; } else { delete payload.amountPaid; }
         if (payload.paymentMonth !== undefined) { payload.paymentMonth = Number(payload.paymentMonth); } else { delete payload.paymentMonth; }
         if (payload.paymentYear !== undefined) { payload.paymentYear = Number(payload.paymentYear); } else { delete payload.paymentYear; }
         if (payload.paymentDate === undefined || payload.paymentDate === null || payload.paymentDate.trim() === '') { delete payload.paymentDate; } else { if (!/^\d{4}-\d{2}-\d{2}$/.test(payload.paymentDate)) { console.warn(`${SERVICE_NAME} Potentially invalid date format: ${payload.paymentDate}`); } }
         if (payload.paymentMethod === undefined) { delete payload.paymentMethod; }
-
         console.log(`${SERVICE_NAME} Attempting PUT to /payments/${paymentId} with payload:`, payload);
-        const response = await apiClient.put<PaymentBaseData>(`/payments/${paymentId}`, payload); // Expect PaymentBaseData
+        const response = await apiClient.put<PaymentBaseData>(`/payments/${paymentId}`, payload);
         console.log(`${SERVICE_NAME} Update successful: Status=${response.status}, Data:`, response.data);
         if (!response.data?.id) throw new Error("Invalid data received after update.");
         return response.data;
@@ -174,36 +208,21 @@ export const deletePayment = async (paymentId: string): Promise<void> => {
 };
 
 
-// *** ADDED FUNCTION TO GET PAYMENTS FOR A SPECIFIC MEMBER ***
+// GET PAYMENTS FOR A SPECIFIC MEMBER (For Ledger Modal)
 export const getPaymentsByMember = async (memberId: string): Promise<AdminPaymentData[]> => {
     const SERVICE_NAME = '[PaymentService getPaymentsByMember]';
-    if (!memberId) {
-        console.error(`${SERVICE_NAME} Member ID is required.`);
-        return []; // Return empty array if no ID provided
-    }
+    if (!memberId) { console.error(`${SERVICE_NAME} Member ID required.`); return []; }
     try {
         console.log(`${SERVICE_NAME} Fetching payments for Member ID: ${memberId}`);
-
-        // --- IMPORTANT ---
         // Assumes backend endpoint is: GET /api/payments?memberId=some_id
-        // Adjust '/payments' and params:{memberId} if your backend route is different
-        // e.g., if it's '/members/${memberId}/payments', change the URL and remove params
-        const response = await apiClient.get<AdminPaymentData[]>('/payments', {
-            params: { memberId: memberId } // Sending memberId as a query parameter
-        });
-        // --- END IMPORTANT ---
-
+        const response = await apiClient.get<AdminPaymentData[]>('/payments', { params: { memberId: memberId } });
         console.log(`${SERVICE_NAME} Fetched ${response.data?.length} payments for member ${memberId}.`);
-        return response.data ?? []; // Return data or empty array
+        return response.data ?? [];
     } catch (error: any) {
-        console.error(`${SERVICE_NAME} Error caught fetching payments for member ${memberId}:`, error.response?.data || error.message);
-        // Log the full error for debugging backend issues
+        console.error(`${SERVICE_NAME} Error fetching payments for member ${memberId}:`, error.response?.data || error.message);
         console.error(`${SERVICE_NAME} Full error object:`, error);
-         if (error.response) {
-            console.error(`${SERVICE_NAME} Error Response Status:`, error.response.status);
-            console.error(`${SERVICE_NAME} Error Response Data:`, error.response.data);
-        }
+         if (error.response) { console.error(`${SERVICE_NAME} Error Status:`, error.response.status); console.error(`${SERVICE_NAME} Error Data:`, error.response.data); }
         throw new Error(error.response?.data?.message || 'Failed to fetch member payment history.');
     }
 };
-// *** END ADDED FUNCTION ***
+// *** END GET PAYMENTS FOR A SPECIFIC MEMBER ***

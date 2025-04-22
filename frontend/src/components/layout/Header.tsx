@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styles from './Header.module.css'; // Ensure CSS file exists and is correct
 import { useAuth } from '../../contexts/AuthContext';
-import { getMyProfile, AdminProfileData } from '../../services/authService'; // Ensure path is correct
+import { getAdminProfile , AdminProfileData } from '../../services/authService'; // Ensure path is correct
 import { FaUserCircle, FaEdit, FaSignOutAlt } from 'react-icons/fa';
 import EditProfileModal from '../profile/EditProfileModal'; // Ensure path is correct
 

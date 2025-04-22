@@ -1,5 +1,5 @@
 // backend/src/routes/paymentRoutes.ts
-// ** Added import for getPayments and new GET / route **
+// ** Added import for recordPaymentByAdmin and new POST /by-admin route **
 
 import express from 'express';
 import {
@@ -8,7 +8,8 @@ import {
     getAllPayments,
     updatePayment,
     deletePayment,
-    getPayments // <-- *** ADD Import for the new controller function ***
+    getPayments,
+    recordPaymentByAdmin // <-- *** ADD Import for the new Admin recording function ***
 } from '../controllers/paymentController'; // Verify path
 import { protect, restrictTo } from '../middleware/authMiddleware'; // Verify path
 
@@ -19,15 +20,18 @@ router.use(protect);
 
 // --- Define Routes ---
 
-// *** ADD THIS NEW ROUTE ***
-// Handles GET /api/payments?memberId=... (and potentially other filters later)
+// GET /api/payments?memberId=... (For Admin to get specific member payments)
 router.get('/', restrictTo('admin'), getPayments);
-// *** END ADDED ROUTE ***
 
-// GET /api/payments/all - Get ALL payments (Admin only) - Can potentially be merged with '/' later
+// GET /api/payments/all - Get ALL payments (Admin only)
 router.get('/all', restrictTo('admin'), getAllPayments);
 
-// POST /api/payments - Record a new payment (Area Admin only) - Stays specific
+// *** ADD THIS NEW ROUTE for Admin recording payment ***
+// POST /api/payments/by-admin - Admin records a payment for any member
+router.post('/by-admin', restrictTo('admin'), recordPaymentByAdmin);
+// *** END ADDED ROUTE ***
+
+// POST /api/payments - Record a new payment (Area Admin only) - Keep original separate
 router.post('/', restrictTo('areaAdmin'), recordPayment);
 
 // GET /api/payments/my-area - Get payments recorded by logged-in Area Admin

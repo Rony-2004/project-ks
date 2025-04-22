@@ -1,17 +1,19 @@
-// backend/src/middleware/authMiddleware.ts (VERIFIED EXPORTS)
+// backend/src/middleware/authMiddleware.ts
+// ** CORRECTED restrictTo Function **
+
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-// Optional: import prisma from '../lib/prisma';
+// Optional: import prisma from '../lib/prisma'; // Not strictly needed here
 
 dotenv.config();
 
-// Extend Express Request type (Optional but recommended)
+// Extend Express Request type (Keep as is)
 declare global { namespace Express { interface Request { user?: { id: string; role: string; }; } } } export {};
 
 interface JwtPayload { id: string; role: string; iat?: number; exp?: number; }
 
-// --- Ensure 'export' is here ---
+// --- protect Middleware (Keep As Is) ---
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
     let token;
     const jwtSecret = process.env.JWT_SECRET;
@@ -25,6 +27,11 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
             console.log(`[Protect Middleware] Token found. Verifying...`);
             const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
             console.log("[Protect Middleware] Decoded JWT Payload:", decoded);
+            // Ensure decoded.role exists before attaching
+            if (!decoded.id || !decoded.role) {
+                 console.error(`[Protect Middleware] Token payload missing id or role.`);
+                 return res.status(401).json({ message: 'Not authorized, invalid token payload' });
+            }
             req.user = { id: decoded.id, role: decoded.role }; // Attach user
             console.log("[Protect Middleware] Attached req.user:", req.user);
             next(); // Proceed
@@ -35,16 +42,35 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
     }
 };
 
-// --- Ensure 'export' is here ---
-export const restrictTo = (...roles: string[]) => {
+
+// --- *** CORRECTED restrictTo Function *** ---
+export const restrictTo = (...allowedRoles: string[]) => { // Changed param name for clarity
     return (req: Request, res: Response, next: NextFunction) => {
-        const userRole = req.user?.role;
-        console.log(`[Restrict Middleware] Checking role. User role: '<span class="math-inline">\{userRole\}', Allowed roles\: \[</span>{roles.join(', ')}]`);
-        if (!userRole || !roles.includes(userRole)) {
+        // @ts-ignore - User object attached by protect middleware
+        const userRole = req.user?.role; // e.g., 'Admin' or 'AreaAdmin' from Token
+
+        // Convert allowed roles to lowercase ONCE for efficient checking
+        const lowerCaseAllowedRoles = allowedRoles.map(role => role.toLowerCase());
+
+        // Convert user's role from token to lowercase for comparison
+        const lowerCaseUserRole = userRole?.toLowerCase();
+
+        // ** Corrected Logging **
+        console.log(`[Restrict Middleware] Checking role. User role: '${userRole}' (checking as '${lowerCaseUserRole}'), Allowed roles: [${lowerCaseAllowedRoles.join(', ')}]`);
+
+        // ** Corrected Case-Insensitive Check **
+        // Check if a user role exists and if its lowercase version is included in the lowercase allowed roles array
+        if (!lowerCaseUserRole || !lowerCaseAllowedRoles.includes(lowerCaseUserRole)) {
              console.log(`[Restrict Middleware] Role restriction FAILED!`);
-            return res.status(403).json({ message: 'You do not have permission.' });
+            // Use 403 Forbidden status code for authorization failures
+            return res.status(403).json({
+                message: `Forbidden: Your role ('${userRole}') is not authorized to access this resource.`
+            });
         }
+
+        // If the check passes:
         console.log(`[Restrict Middleware] Role check PASSED.`);
-        next();
+        next(); // User has one of the allowed roles, proceed to the next middleware/controller
     };
 };
+// --- *** END CORRECTED restrictTo Function *** ---
