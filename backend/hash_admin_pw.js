@@ -24,3 +24,4 @@ if (myAdminPassword === 'CHOOSE_A_STRONG_PASSWORD' || !myAdminPassword) {
         }
     });
 }
+//node hash_admin_pw.js
